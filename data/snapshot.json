@@ -1,5 +1,5 @@
 {
-  "built_at": "2026-03-01T13:04:23.604059Z",
+  "built_at": "2026-03-01T13:13:21.145953Z",
   "groups": {
     "Indices": [
       {
@@ -58,14 +58,8 @@
         "dist_sma50_atr": -3.79,
         "rs": 75.0,
         "rs_chart": "data/charts/IBIT.png",
-        "long": [
-          "BITX",
-          "BITU"
-        ],
-        "short": [
-          "SBIT",
-          "BITI"
-        ],
+        "long": [],
+        "short": [],
         "abc": "C"
       },
       {
@@ -92,9 +86,7 @@
         "dist_sma50_atr": 1.99,
         "rs": 25.0,
         "rs_chart": "data/charts/MDY.png",
-        "long": [
-          "MIDU"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -108,12 +100,8 @@
         "dist_sma50_atr": 0.37,
         "rs": 5.0,
         "rs_chart": "data/charts/IWM.png",
-        "long": [
-          "TNA"
-        ],
-        "short": [
-          "TZA"
-        ],
+        "long": [],
+        "short": [],
         "abc": "A"
       },
       {
@@ -164,9 +152,7 @@
         "dist_sma50_atr": -3.78,
         "rs": 70.0,
         "rs_chart": "data/charts/ETHA.png",
-        "long": [
-          "ETHU"
-        ],
+        "long": [],
         "short": [],
         "abc": "C"
       },
@@ -280,12 +266,8 @@
         "dist_sma50_atr": 1.35,
         "rs": 70.0,
         "rs_chart": "data/charts/SMH.png",
-        "long": [
-          "SOXL"
-        ],
-        "short": [
-          "SOXS"
-        ],
+        "long": [],
+        "short": [],
         "abc": "A"
       },
       {
@@ -326,9 +308,7 @@
         "dist_sma50_atr": 3.93,
         "rs": 85.0,
         "rs_chart": "data/charts/ROBO.png",
-        "long": [
-          "UBOT"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -356,9 +336,7 @@
         "dist_sma50_atr": -3.19,
         "rs": 40.0,
         "rs_chart": "data/charts/WCLD.png",
-        "long": [
-          "CLDL"
-        ],
+        "long": [],
         "short": [],
         "abc": "C"
       },
@@ -372,9 +350,7 @@
         "dist_sma50_atr": 2.82,
         "rs": 55.0,
         "rs_chart": "data/charts/ITA.png",
-        "long": [
-          "DFEN"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -444,9 +420,7 @@
         "dist_sma50_atr": 0.5,
         "rs": 5.0,
         "rs_chart": "data/charts/PEJ.png",
-        "long": [
-          "OOTO"
-        ],
+        "long": [],
         "short": [],
         "abc": "B"
       },
@@ -460,12 +434,8 @@
         "dist_sma50_atr": -2.48,
         "rs": 75.0,
         "rs_chart": "data/charts/FDN.png",
-        "long": [
-          "WEBL"
-        ],
-        "short": [
-          "WEBS"
-        ],
+        "long": [],
+        "short": [],
         "abc": "C"
       },
       {
@@ -492,12 +462,8 @@
         "dist_sma50_atr": -1.28,
         "rs": 95.0,
         "rs_chart": "data/charts/UNG.png",
-        "long": [
-          "BOIL"
-        ],
-        "short": [
-          "KOLD"
-        ],
+        "long": [],
+        "short": [],
         "abc": "C"
       },
       {
@@ -524,9 +490,7 @@
         "dist_sma50_atr": -4.61,
         "rs": 10.0,
         "rs_chart": "data/charts/KWEB.png",
-        "long": [
-          "CWEB"
-        ],
+        "long": [],
         "short": [],
         "abc": "C"
       },
@@ -540,9 +504,7 @@
         "dist_sma50_atr": -1.0,
         "rs": 0.0,
         "rs_chart": "data/charts/KRE.png",
-        "long": [
-          "DPST"
-        ],
+        "long": [],
         "short": [],
         "abc": "B"
       },
@@ -556,14 +518,8 @@
         "dist_sma50_atr": -3.79,
         "rs": 75.0,
         "rs_chart": "data/charts/IBIT.png",
-        "long": [
-          "BITX",
-          "BITU"
-        ],
-        "short": [
-          "SBIT",
-          "BITI"
-        ],
+        "long": [],
+        "short": [],
         "abc": "C"
       },
       {
@@ -576,9 +532,7 @@
         "dist_sma50_atr": -0.55,
         "rs": 10.0,
         "rs_chart": "data/charts/XRT.png",
-        "long": [
-          "RETL"
-        ],
+        "long": [],
         "short": [],
         "abc": "C"
       },
@@ -606,9 +560,7 @@
         "dist_sma50_atr": 1.26,
         "rs": 45.0,
         "rs_chart": "data/charts/DRIV.png",
-        "long": [
-          "EVAV"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -622,9 +574,7 @@
         "dist_sma50_atr": -1.77,
         "rs": 5.0,
         "rs_chart": "data/charts/MSOS.png",
-        "long": [
-          "MSOX"
-        ],
+        "long": [],
         "short": [],
         "abc": "C"
       },
@@ -652,9 +602,7 @@
         "dist_sma50_atr": 5.89,
         "rs": 85.0,
         "rs_chart": "data/charts/XLU.png",
-        "long": [
-          "UTSL"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -696,12 +644,8 @@
         "dist_sma50_atr": -1.51,
         "rs": 95.0,
         "rs_chart": "data/charts/ARKK.png",
-        "long": [
-          "TARK"
-        ],
-        "short": [
-          "SARK"
-        ],
+        "long": [],
+        "short": [],
         "abc": "C"
       },
       {
@@ -714,9 +658,7 @@
         "dist_sma50_atr": 1.75,
         "rs": 10.0,
         "rs_chart": "data/charts/XTN.png",
-        "long": [
-          "TPOR"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -804,14 +746,8 @@
         "dist_sma50_atr": 4.61,
         "rs": 85.0,
         "rs_chart": "data/charts/GDX.png",
-        "long": [
-          "NUGT",
-          "GDXU"
-        ],
-        "short": [
-          "JDST",
-          "GDXD"
-        ],
+        "long": [],
+        "short": [],
         "abc": "A"
       },
       {
@@ -838,12 +774,8 @@
         "dist_sma50_atr": 0.37,
         "rs": 5.0,
         "rs_chart": "data/charts/IWM.png",
-        "long": [
-          "TNA"
-        ],
-        "short": [
-          "TZA"
-        ],
+        "long": [],
+        "short": [],
         "abc": "A"
       },
       {
@@ -856,12 +788,8 @@
         "dist_sma50_atr": 5.0,
         "rs": 100.0,
         "rs_chart": "data/charts/XOP.png",
-        "long": [
-          "GUSH"
-        ],
-        "short": [
-          "DRIP"
-        ],
+        "long": [],
+        "short": [],
         "abc": "A"
       },
       {
@@ -902,12 +830,8 @@
         "dist_sma50_atr": -2.75,
         "rs": 25.0,
         "rs_chart": "data/charts/FXI.png",
-        "long": [
-          "YINN"
-        ],
-        "short": [
-          "YANG"
-        ],
+        "long": [],
+        "short": [],
         "abc": "C"
       },
       {
@@ -1008,9 +932,7 @@
         "dist_sma50_atr": 1.33,
         "rs": 35.0,
         "rs_chart": "data/charts/XHB.png",
-        "long": [
-          "NAIL"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -1052,12 +974,8 @@
         "dist_sma50_atr": 4.33,
         "rs": 100.0,
         "rs_chart": "data/charts/USO.png",
-        "long": [
-          "UCO"
-        ],
-        "short": [
-          "SCO"
-        ],
+        "long": [],
+        "short": [],
         "abc": "A"
       },
       {
@@ -1098,12 +1016,8 @@
         "dist_sma50_atr": 0.74,
         "rs": 55.0,
         "rs_chart": "data/charts/XBI.png",
-        "long": [
-          "LABU"
-        ],
-        "short": [
-          "LABD"
-        ],
+        "long": [],
+        "short": [],
         "abc": "A"
       },
       {
@@ -1172,9 +1086,7 @@
         "dist_sma50_atr": 3.49,
         "rs": 55.0,
         "rs_chart": "data/charts/PPH.png",
-        "long": [
-          "PILL"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -1188,12 +1100,8 @@
         "dist_sma50_atr": -2.51,
         "rs": 100.0,
         "rs_chart": "data/charts/FNGS.png",
-        "long": [
-          "FNGB"
-        ],
-        "short": [
-          "FNGD"
-        ],
+        "long": [],
+        "short": [],
         "abc": "C"
       },
       {
@@ -1404,9 +1312,7 @@
         "dist_sma50_atr": 10.66,
         "rs": 100.0,
         "rs_chart": "data/charts/EWY.png",
-        "long": [
-          "KORU"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -1462,9 +1368,7 @@
         "dist_sma50_atr": 4.04,
         "rs": 15.0,
         "rs_chart": "data/charts/IEV.png",
-        "long": [
-          "EURL"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -1506,9 +1410,7 @@
         "dist_sma50_atr": 5.76,
         "rs": 35.0,
         "rs_chart": "data/charts/EWJ.png",
-        "long": [
-          "EZJ"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -1522,9 +1424,7 @@
         "dist_sma50_atr": 3.91,
         "rs": 30.0,
         "rs_chart": "data/charts/EWW.png",
-        "long": [
-          "MEXX"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -1566,9 +1466,7 @@
         "dist_sma50_atr": 1.72,
         "rs": 60.0,
         "rs_chart": "data/charts/ASHR.png",
-        "long": [
-          "CHAU"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
@@ -1610,9 +1508,7 @@
         "dist_sma50_atr": -1.39,
         "rs": 70.0,
         "rs_chart": "data/charts/INDA.png",
-        "long": [
-          "INDL"
-        ],
+        "long": [],
         "short": [],
         "abc": "C"
       },
@@ -1626,12 +1522,8 @@
         "dist_sma50_atr": 4.02,
         "rs": 100.0,
         "rs_chart": "data/charts/EEM.png",
-        "long": [
-          "EDC"
-        ],
-        "short": [
-          "EDZ"
-        ],
+        "long": [],
+        "short": [],
         "abc": "A"
       },
       {
@@ -1644,9 +1536,7 @@
         "dist_sma50_atr": 4.53,
         "rs": 45.0,
         "rs_chart": "data/charts/EWZ.png",
-        "long": [
-          "BRZU"
-        ],
+        "long": [],
         "short": [],
         "abc": "A"
       },
