@@ -1,5 +1,5 @@
 {
-  "built_at": "2026-03-01T14:13:11.094510Z",
+  "built_at": "2026-03-01T14:27:37.800193Z",
   "groups": {
     "Indices": [
       {
@@ -119,43 +119,15 @@
         "abc": "A"
       },
       {
-        "ticker": "SPYI.DE",
-        "daily": -0.37,
-        "intra": -0.39,
-        "5d": -96.0,
-        "20d": -95.92,
-        "atr_pct": 144.6,
-        "dist_sma50_atr": -0.66,
-        "rs": 15.0,
-        "rs_chart": "data/charts/SPYI_DE.png",
-        "long": [],
-        "short": [],
-        "abc": "C"
-      },
-      {
-        "ticker": "VWCE.DE",
-        "daily": -0.4,
-        "intra": -0.37,
-        "5d": -0.04,
-        "20d": 1.77,
+        "ticker": "SPYI",
+        "daily": -0.38,
+        "intra": 0.4,
+        "5d": -0.27,
+        "20d": -0.39,
         "atr_pct": 1.0,
-        "dist_sma50_atr": 1.65,
-        "rs": 100.0,
-        "rs_chart": "data/charts/VWCE_DE.png",
-        "long": [],
-        "short": [],
-        "abc": "A"
-      },
-      {
-        "ticker": "VGWE.DE",
-        "daily": -0.17,
-        "intra": -0.09,
-        "5d": 0.63,
-        "20d": 5.89,
-        "atr_pct": 0.7,
-        "dist_sma50_atr": 7.45,
-        "rs": 100.0,
-        "rs_chart": "data/charts/VGWE_DE.png",
+        "dist_sma50_atr": 0.39,
+        "rs": 25.0,
+        "rs_chart": "data/charts/SPYI.png",
         "long": [],
         "short": [],
         "abc": "A"
@@ -169,16 +141,16 @@
         5.64
       ],
       "intra": [
-        -0.39,
+        0.25,
         2.09
       ],
       "5d": [
-        -96.0,
+        -0.5,
         10.92
       ],
       "20d": [
-        -95.92,
-        5.89
+        -19.49,
+        3.25
       ]
     }
   }
