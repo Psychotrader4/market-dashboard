@@ -5,16 +5,17 @@ Outputs: data/snapshot.json, data/events.json, data/meta.json, data/charts/*.png
 Timezone: Europe/Berlin (MEZ/MESZ)
 
 Fixes:
-  - FIX 1: flatten_columns() → löst yfinance MultiIndex-Problem (ab v0.2.38)
-  - FIX 2: period="2mo" für hist → genug Tage auch bei Feiertagsmonaten
-  - FIX 3: Retry-Logik (3 Versuche) gegen Rate-Limiting
-  - FIX 4: pd.to_datetime(index.date) → Timezone-Mismatch Xetra vs. US
-  - FIX 5: period="6mo" für daily → sicher >= 40 Handelstage
-  - FIX 6: Fallback .DE → .L für Xetra-Ticker
-  - FIX 7: Zeitstempel in MEZ/MESZ (Europe/Berlin)
-  - FIX 8: default_symbol greift dynamisch auf ersten Gruppen-Key zu
-  - FIX 9: ^VIX / ^VVIX – korrektes Symbol-Präfix + fehlendes Open abgesichert
+  - FIX 1:  flatten_columns() → löst yfinance MultiIndex-Problem (ab v0.2.38)
+  - FIX 2:  period="2mo" für hist → genug Tage auch bei Feiertagsmonaten
+  - FIX 3:  Retry-Logik (3 Versuche) gegen Rate-Limiting
+  - FIX 4:  pd.to_datetime(index.date) → Timezone-Mismatch Xetra vs. US
+  - FIX 5:  period="6mo"/"1y" für daily → sicher >= Mindestanzahl Handelstage
+  - FIX 6:  Fallback .DE → .L für Xetra-Ticker
+  - FIX 7:  Zeitstempel in MEZ/MESZ (Europe/Berlin)
+  - FIX 8:  default_symbol greift dynamisch auf ersten Gruppen-Key zu
+  - FIX 9:  ^VIX / ^VVIX – korrektes Symbol-Präfix + fehlendes Open abgesichert
   - FIX 10: RRS wird für Indizes (^) übersprungen
+  - FIX 11: Indizes verwenden period="1y" + niedrigere Mindestzeilen (min_daily=10)
 """
 from __future__ import print_function
 import argparse
@@ -119,7 +120,7 @@ def now_berlin() -> datetime:
 
 
 def is_index(ticker_symbol: str) -> bool:
-    """FIX 10: Erkennt Markt-Indizes (^VIX, ^VVIX, ^GSPC etc.)."""
+    """FIX 10: Erkennt Markt-Indizes wie ^VIX, ^VVIX, ^GSPC."""
     return ticker_symbol.startswith("^")
 
 
@@ -302,29 +303,37 @@ def get_stock_data(ticker_symbol, charts_dir):
         stock = yf.Ticker(ticker_symbol)
 
         # FIX 1+2: flatten_columns + period="2mo"
-        hist  = fetch_history(stock, "2mo")
-        # FIX 5: period="6mo" → sicher >= 40 Handelstage
-        daily = fetch_history(stock, "6mo")
+        hist = fetch_history(stock, "2mo")
+
+        # FIX 11: Indizes brauchen längere Periode für stabile SMA50-Berechnung
+        #         und eine niedrigere Mindestanzahl an Zeilen
+        period_daily = "1y" if is_index(ticker_symbol) else "6mo"
+        min_daily    = 10   if is_index(ticker_symbol) else 40
+        daily = fetch_history(stock, period_daily)
 
         # FIX 6: Fallback auf Londoner Listing wenn .DE-Ticker leer
-        if (len(hist) < 2 or len(daily) < 40) and ticker_symbol.endswith(".DE"):
+        if (len(hist) < 2 or len(daily) < min_daily) and ticker_symbol.endswith(".DE"):
             fallback = ticker_symbol.replace(".DE", ".L")
             print(f"  [FALLBACK] {ticker_symbol} → {fallback}")
             stock = yf.Ticker(fallback)
             hist  = fetch_history(stock, "2mo")
-            daily = fetch_history(stock, "6mo")
+            daily = fetch_history(stock, period_daily)
 
-        if len(hist) < 2 or len(daily) < 40:
-            print(f"  [SKIP] {ticker_symbol}: zu wenig Daten (hist={len(hist)}, daily={len(daily)})")
+        if len(hist) < 2 or len(daily) < min_daily:
+            print(f"  [SKIP] {ticker_symbol}: zu wenig Daten (hist={len(hist)}, daily={len(daily)}, min={min_daily})")
             return None
 
         daily_change      = (hist['Close'].iloc[-1] / hist['Close'].iloc[-2]  - 1) * 100
         five_day_change   = (hist['Close'].iloc[-1] / hist['Close'].iloc[-6]  - 1) * 100 if len(hist) >= 6  else None
         twenty_day_change = (hist['Close'].iloc[-1] / hist['Close'].iloc[-21] - 1) * 100 if len(hist) >= 21 else None
 
-        # FIX 9: Open-Feld existiert bei Indizes (^VIX, ^VVIX) nicht immer
+        # FIX 9: Open-Feld existiert bei Indizes (^VIX, ^VVIX) nicht zuverlässig
         try:
-            if 'Open' in hist.columns and hist['Open'].iloc[-1] not in (None, 0) and not pd.isna(hist['Open'].iloc[-1]):
+            if (
+                'Open' in hist.columns
+                and hist['Open'].iloc[-1] not in (None, 0)
+                and not pd.isna(hist['Open'].iloc[-1])
+            ):
                 intraday_change = (hist['Close'].iloc[-1] / hist['Open'].iloc[-1] - 1) * 100
             else:
                 intraday_change = None
@@ -397,6 +406,24 @@ def main():
 
     now_mez = now_berlin()
     print(f"Build gestartet: {now_mez.strftime('%d.%m.%Y %H:%M %Z')}")
+
+    # ── DEBUG: ^VIX / ^VVIX Diagnose ─────────────────────────────────────────
+    print("\n=== DEBUG ^VIX / ^VVIX ===")
+    for sym in ["^VIX", "^VVIX"]:
+        try:
+            tk = yf.Ticker(sym)
+            h  = flatten_columns(tk.history(period="2mo"))
+            d  = flatten_columns(tk.history(period="1y"))
+            print(f"  {sym}: hist={len(h)} rows, daily={len(d)} rows")
+            if not h.empty:
+                print(f"    Columns : {list(h.columns)}")
+                print(f"    Close   : {h['Close'].iloc[-1]:.2f}")
+                open_val = h['Open'].iloc[-1] if 'Open' in h.columns else 'N/A'
+                print(f"    Open    : {open_val}")
+        except Exception as e:
+            print(f"  {sym}: FEHLER – {e}")
+    print("=== END DEBUG ===\n")
+    # ─────────────────────────────────────────────────────────────────────────
 
     print("Fetching economic events...")
     events = get_upcoming_key_events()
