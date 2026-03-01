@@ -39,7 +39,7 @@ KEY_EVENTS = [
 
 # FIX 1: Duplikate entfernt (QQQ und RSP waren doppelt)
 STOCK_GROUPS = {
-    "Indices": ["SPY", "RSP", "QQQ", "QQQE", "GLD", "SLV", "ACWI", "SPYI.DE", "VWCE.DE", "VGWE.DE"]
+    "Indices": ["SPY", "RSP", "QQQ", "QQQE", "GLD", "4GLD", "SLV", "ACWI", "SPYI", "VWCE", "VGWE", "VDIV"]
 }
 
 LEVERAGED_ETFS = {
