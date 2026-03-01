@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-03-01T19:50:06+01:00",
-  "built_at_label": "01.03.2026 19:50 CET",
+  "built_at": "2026-03-01T20:38:40+01:00",
+  "built_at_label": "01.03.2026 20:38 CET",
   "groups": {
     "Indices": [
       {
@@ -114,6 +114,34 @@
           "ZSL"
         ],
         "abc": "A"
+      },
+      {
+        "ticker": "^VIX",
+        "daily": 6.6,
+        "intra": 3.01,
+        "5d": 4.03,
+        "20d": 17.65,
+        "atr_pct": 12.9,
+        "dist_sma50_atr": 1.29,
+        "rs": null,
+        "rs_chart": null,
+        "long": [],
+        "short": [],
+        "abc": "A"
+      },
+      {
+        "ticker": "^VVIX",
+        "daily": 6.47,
+        "intra": -0.06,
+        "5d": 2.01,
+        "20d": 8.97,
+        "atr_pct": 7.3,
+        "dist_sma50_atr": 1.54,
+        "rs": null,
+        "rs_chart": null,
+        "long": [],
+        "short": [],
+        "abc": "A"
       }
     ]
   },
@@ -121,11 +149,11 @@
     "Indices": {
       "daily": [
         -0.48,
-        5.64
+        6.6
       ],
       "intra": [
-        0.25,
-        2.09
+        -0.06,
+        3.01
       ],
       "5d": [
         -0.5,
@@ -133,7 +161,7 @@
       ],
       "20d": [
         -19.49,
-        3.25
+        17.65
       ]
     }
   }
