@@ -39,7 +39,7 @@ KEY_EVENTS = [
 ]
 
 STOCK_GROUPS = {
-    "Indices, Metals, ETF": ["SPY", "RSP", "QQQ", "QQQE", "QQQ", "RSP", "GLD", "SLV", "ACWI", "SPYI.DE", "VWCE.DE", "VGWE.DE"]
+    "Indices": ["SPY", "RSP", "QQQ", "QQQE", "QQQ", "RSP", "GLD", "SLV", "ACWI", "SPYI.DE", "VWCE.DE", "VGWE.DE"]
 }
 
 LEVERAGED_ETFS = {
