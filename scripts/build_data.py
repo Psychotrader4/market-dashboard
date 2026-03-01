@@ -1,461 +1,494 @@
-"""
-Build dashboard data for static GitHub Pages deployment.
-Run from repo root: python scripts/build_data.py [--out-dir data]
-Outputs: data/snapshot.json, data/events.json, data/meta.json, data/charts/*.png
-Timezone: Europe/Berlin (MEZ/MESZ)
-
-Fixes:
-  - FIX 1: flatten_columns() → löst yfinance MultiIndex-Problem (ab v0.2.38)
-  - FIX 2: period="2mo" für hist → genug Tage auch bei Feiertagsmonaten
-  - FIX 3: Retry-Logik (3 Versuche) gegen Rate-Limiting
-  - FIX 4: pd.to_datetime(index.date) → Timezone-Mismatch Xetra vs. US
-  - FIX 5: period="6mo" für daily → sicher >= 40 Handelstage
-  - FIX 6: Fallback .DE → .L für Xetra-Ticker
-  - FIX 7: Zeitstempel in MEZ/MESZ (Europe/Berlin)
-  - FIX 8: default_symbol greift dynamisch auf ersten Gruppen-Key zu
-"""
-from __future__ import print_function
-import argparse
-import json
-import os
-import re
-import time
-
-import yfinance as yf
-import pandas as pd
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo          # Python >= 3.9
-from io import BytesIO
-from scipy.stats import rankdata
-
-try:
-    import investpy
-except ImportError:
-    investpy = None
-
-# Zeitzone Europe/Berlin (automatisch MEZ/MESZ)
-TZ_BERLIN = ZoneInfo("Europe/Berlin")
-
-# --- Config ---
-KEY_EVENTS = [
-    "Fed", "Federal Reserve", "Interest Rate", "FOMC",
-    "ISM Manufacturing", "ISM Non-Manufacturing", "ISM Services", "ISM",
-    "CPI", "Consumer Price Index", "Nonfarm Payrolls", "NFP", "Employment",
-    "PPI", "Producer Price Index", "PCE", "Core PCE", "Personal Consumption",
-    "Retail Sales", "GDP", "Gross Domestic Product", "Unemployment", "Jobless Claims", "Initial Claims",
-    "Housing Starts", "Building Permits", "Durable Goods", "Factory Orders",
-    "Consumer Confidence", "Michigan Consumer", "Trade Balance", "Trade Deficit",
-    "Beige Book", "Fed Minutes", "JOLTS", "Job Openings"
-]
-
-STOCK_GROUPS = {
-    "Indices": ["ACWI", "SPY", "RSP", "QQQ", "QQQE", "IAU", "SLV", "VIX", "VVIX"]
-}
-
-LEVERAGED_ETFS = {
-    "QQQ":  {"long": ["TQQQ"],          "short": ["SQQQ"]},
-    "TLT":  {"long": ["TMF"],           "short": ["TMV"]},
-    "SPY":  {"long": ["SPXL", "UPRO"], "short": ["SPXS", "SH"]},
-    "SLV":  {"long": ["AGQ"],           "short": ["ZSL"]},
-    "GLD":  {"long": ["UGL"],           "short": ["GLL"]},
-    "UNG":  {"long": ["BOIL"],          "short": ["KOLD"]},
-    "GDX":  {"long": ["NUGT", "GDXU"], "short": ["JDST", "GDXD"]},
-    "IBIT": {"long": ["BITX", "BITU"], "short": ["SBIT", "BITI"]},
-    "MSOS": {"long": ["MSOX"],          "short": []},
-    "REMX": {"long": [],                "short": []},
-    "EWY":  {"long": ["KORU"],          "short": []},
-    "IEV":  {"long": ["EURL"],          "short": []},
-    "EWJ":  {"long": ["EZJ"],           "short": []},
-    "EWW":  {"long": ["MEXX"],          "short": []},
-    "ASHR": {"long": ["CHAU"],          "short": []},
-    "INDA": {"long": ["INDL"],          "short": []},
-    "EEM":  {"long": ["EDC"],           "short": ["EDZ"]},
-    "EWZ":  {"long": ["BRZU"],          "short": []},
-}
-
-SECTOR_COLORS = {
-    "Information Technology": "#3f51b5", "Industrials":           "#333",    "Emerging Markets":    "#00bcd4",
-    "Consumer Discretionary": "#4caf50", "Health Care":           "#e91e63", "Financials":          "#ff5722",
-    "Energy":                 "#795548", "Communication Services": "#9c27b0", "Real Estate":         "#673ab7",
-    "Commodities":            "#8b6914", "Materials":             "#ff9800", "Utilities":           "#009688",
-    "Consumer Staples":       "#8bc34a", "Broad Market":          "#9e9e9e",
-}
-
-Industries_COLORS = {
-    "SMH":  "#3f51b5", "ARKK": "#3f51b5", "XTN":  "#333",    "KWEB": "#00bcd4", "XRT":  "#4caf50", "KRE":  "#ff5722",
-    "ARKF": "#3f51b5", "ARKG": "#e91e63", "BOAT": "#333",    "DRIV": "#4caf50", "KBE":  "#ff5722", "XES":  "#795548",
-    "XBI":  "#e91e63", "OIH":  "#795548", "SOCL": "#9c27b0", "ROBO": "#333",    "AIQ":  "#3f51b5", "XHB":  "#4caf50",
-    "FNGS": "#9e9e9e", "BLOK": "#3f51b5", "LIT":  "#ff9800", "WCLD": "#3f51b5", "XOP":  "#795548", "FDN":  "#4caf50",
-    "TAN":  "#795548", "IBB":  "#e91e63", "PAVE": "#333",    "PEJ":  "#4caf50", "KCE":  "#ff5722", "XHE":  "#e91e63",
-    "IBUY": "#4caf50", "MSOS": "#4caf50", "FCG":  "#795548", "JETS": "#4caf50", "IPAY": "#ff5722", "SLX":  "#ff9800",
-    "IGV":  "#3f51b5", "CIBR": "#3f51b5", "EATZ": "#4caf50", "PPH":  "#e91e63", "IHI":  "#e91e63", "UTES": "#009688",
-    "ICLN": "#795548", "XME":  "#ff9800", "IYZ":  "#9c27b0", "URA":  "#795548", "ITA":  "#333",    "VNQ":  "#673ab7",
-    "SCHH": "#673ab7", "KIE":  "#ff5722", "REZ":  "#673ab7", "CPER": "#8b6914", "PBJ":  "#8bc34a", "SLV":  "#8b6914",
-    "GLD":  "#8b6914", "SILJ": "#ff9800", "GDX":  "#ff9800", "FXI":  "#00bcd4", "GXC":  "#00bcd4", "USO":  "#8b6914",
-    "DBA":  "#8b6914", "UNG":  "#8b6914", "DBC":  "#8b6914", "WGMI": "#3f51b5", "REMX": "#ff9800",
-}
-
-
-# ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
-
-def get_ticker_to_sector_mapping():
-    color_to_sector = {c: s for s, c in SECTOR_COLORS.items()}
-    return {t: color_to_sector.get(c, "Broad Market") for t, c in Industries_COLORS.items()}
-
-
-TICKER_TO_SECTOR = get_ticker_to_sector_mapping()
-
-
-def now_berlin() -> datetime:
-    """Aktuelle Zeit in Europe/Berlin (MEZ/MESZ)."""
-    return datetime.now(TZ_BERLIN)
-
-
-def flatten_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    FIX 1: yfinance >= 0.2.38 gibt bei manchen Tickern einen MultiIndex zurück.
-    z.B. ('Close', 'ACWI') statt 'Close' → KeyError ohne diesen Fix.
-    """
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
-    return df
-
-
-def fetch_history(ticker_obj, period: str) -> pd.DataFrame:
-    """Wrapper: history() + flatten_columns() in einem Schritt."""
-    return flatten_columns(ticker_obj.history(period=period))
-
-
-def fetch_history_range(ticker_obj, start, end) -> pd.DataFrame:
-    """Wrapper: history(start, end) + flatten_columns()."""
-    return flatten_columns(ticker_obj.history(start=start, end=end))
-
-
-def get_leveraged_etfs(ticker):
-    if ticker in LEVERAGED_ETFS:
-        return LEVERAGED_ETFS[ticker].get("long", []), LEVERAGED_ETFS[ticker].get("short", [])
-    return [], []
-
-
-# ─── Wirtschaftskalender ──────────────────────────────────────────────────────
-
-def get_upcoming_key_events(days_ahead=7):
-    if investpy is None:
-        return []
-    today     = now_berlin().date()
-    end_date  = today + timedelta(days=days_ahead)
-    from_date = today.strftime('%d/%m/%Y')
-    to_date   = end_date.strftime('%d/%m/%Y')
-    try:
-        calendar = investpy.news.economic_calendar(
-            time_zone=None, time_filter='time_only', countries=['united states'],
-            importances=['high'], categories=None, from_date=from_date, to_date=to_date
-        )
-        if calendar.empty:
-            return []
-        pattern  = '|'.join(KEY_EVENTS)
-        filtered = calendar[
-            (calendar['event'].str.contains(pattern, case=False, na=False)) &
-            (calendar['importance'].str.lower() == 'high')
-        ]
-        if filtered.empty:
-            return []
-        filtered = filtered.sort_values(['date', 'time'])
-        return filtered[['date', 'time', 'event']].to_dict('records')
-    except Exception as e:
-        print("Economic calendar error:", e)
-        return []
-
-
-# ─── Indikatoren ──────────────────────────────────────────────────────────────
-
-def calculate_atr(hist_data, period=14):
-    try:
-        hl = hist_data['High'] - hist_data['Low']
-        hc = (hist_data['High'] - hist_data['Close'].shift()).abs()
-        lc = (hist_data['Low']  - hist_data['Close'].shift()).abs()
-        tr = pd.concat([hl, hc, lc], axis=1).max(axis=1)
-        return tr.ewm(alpha=1/period, adjust=False).mean().iloc[-1]
-    except Exception:
-        return None
-
-
-def calculate_rrs(stock_data, spy_data, atr_length=14, length_rolling=50, length_sma=20, atr_multiplier=1.0):
-    """
-    Relative Rotation Strength.
-    FIX 4: pd.to_datetime(index.date) normalisiert Timestamps auf Tagesbasis →
-    löst Timezone-Mismatch zwischen Xetra (.DE) und US-Tickern.
-    """
-    try:
-        stock_data = stock_data.copy()
-        spy_data   = spy_data.copy()
-        stock_data.index = pd.to_datetime(stock_data.index.date)
-        spy_data.index   = pd.to_datetime(spy_data.index.date)
-
-        merged = pd.merge(
-            stock_data[['High', 'Low', 'Close']], spy_data[['High', 'Low', 'Close']],
-            left_index=True, right_index=True, suffixes=('_stock', '_spy'), how='inner'
-        )
-        if len(merged) < atr_length + 1:
-            return None
-        for prefix in ['stock', 'spy']:
-            h, l, c = merged[f'High_{prefix}'], merged[f'Low_{prefix}'], merged[f'Close_{prefix}']
-            tr = pd.concat([h - l, (h - c.shift()).abs(), (l - c.shift()).abs()], axis=1).max(axis=1)
-            merged[f'atr_{prefix}'] = tr.ewm(alpha=1/atr_length, adjust=False).mean()
-        sc       = merged['Close_stock'] - merged['Close_stock'].shift(1)
-        spy_c    = merged['Close_spy']   - merged['Close_spy'].shift(1)
-        spy_pi   = spy_c / merged['atr_spy']
-        expected = spy_pi * merged['atr_stock'] * atr_multiplier
-        rrs         = (sc - expected) / merged['atr_stock']
-        rolling_rrs = rrs.rolling(window=length_rolling, min_periods=1).mean()
-        rrs_sma     = rolling_rrs.rolling(window=length_sma, min_periods=1).mean()
-        return pd.DataFrame({'RRS': rrs, 'rollingRRS': rolling_rrs, 'RRS_SMA': rrs_sma}, index=merged.index)
-    except Exception:
-        return None
-
-
-def calculate_sma(hist_data, period=50):
-    try:
-        return hist_data['Close'].rolling(window=period).mean().iloc[-1]
-    except Exception:
-        return None
-
-
-def calculate_ema(hist_data, period=10):
-    try:
-        return hist_data['Close'].ewm(span=period, adjust=False).mean().iloc[-1]
-    except Exception:
-        return None
-
-
-def calculate_abc_rating(hist_data):
-    try:
-        ema10 = calculate_ema(hist_data, 10)
-        ema20 = calculate_ema(hist_data, 20)
-        sma50 = calculate_sma(hist_data, 50)
-        if ema10 is None or ema20 is None or sma50 is None:
-            return None
-        if ema10 > ema20 and ema20 > sma50:
-            return "A"
-        if (ema10 > ema20 and ema20 < sma50) or (ema10 < ema20 and ema20 > sma50):
-            return "B"
-        if ema10 < ema20 and ema20 < sma50:
-            return "C"
-    except Exception:
-        pass
-    return None
-
-
-# ─── Chart ────────────────────────────────────────────────────────────────────
-
-def create_rs_chart_png(rrs_data, ticker, charts_dir):
-    try:
-        recent = rrs_data.tail(20)
-        if len(recent) == 0:
-            return None
-        plt.style.use('dark_background')
-        fig, ax = plt.subplots(figsize=(8, 2))
-        fig.patch.set_facecolor('#1a1a1a')
-        ax.set_facecolor('#1a1a1a')
-        rolling_rrs = recent['rollingRRS'].values
-        rrs_sma     = recent['RRS_SMA'].values
-        max_idx     = rolling_rrs.argmax()
-        bar_colors  = ['#4ade80' if i == max_idx else '#b0b0b0' for i in range(len(rolling_rrs))]
-        ax.bar(range(len(rolling_rrs)), rolling_rrs, color=bar_colors, width=0.8, edgecolor='none')
-        ax.plot(range(len(rrs_sma)), rrs_sma, color='yellow', lw=2)
-        ax.axhline(y=0, color='#808080', linestyle='--', linewidth=1)
-        mn  = min(rolling_rrs.min(), rrs_sma.min() if len(rrs_sma) else 0)
-        mx  = max(rolling_rrs.max(), rrs_sma.max() if len(rrs_sma) else 0)
-        pad = 0.1 if mn == mx else (mx - mn) * 0.2
-        ax.set_ylim(mn - pad, mx + pad)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        for s in ax.spines.values():
-            s.set_visible(False)
-        fig.tight_layout(pad=0)
-        safe = re.sub(r'[^a-zA-Z0-9]', '_', ticker)
-        path = os.path.join(charts_dir, f"{safe}.png")
-        fig.savefig(path, format='png', dpi=80, bbox_inches='tight', facecolor='#1a1a1a')
-        plt.close(fig)
-        return f"data/charts/{safe}.png"
-    except Exception as e:
-        print("Chart error", ticker, e)
-        return None
-
-
-# ─── Kerndaten pro Ticker ─────────────────────────────────────────────────────
-
-def get_stock_data(ticker_symbol, charts_dir):
-    try:
-        stock = yf.Ticker(ticker_symbol)
-
-        # FIX 1+2: flatten_columns + period="2mo" (genug Tage auch bei Feiertagen)
-        hist  = fetch_history(stock, "2mo")
-        # FIX 5: period="6mo" → sicher >= 40 Handelstage
-        daily = fetch_history(stock, "6mo")
-
-        # FIX 6: Fallback auf Londoner Listing wenn .DE-Ticker leer
-        if (len(hist) < 2 or len(daily) < 40) and ticker_symbol.endswith(".DE"):
-            fallback = ticker_symbol.replace(".DE", ".L")
-            print(f"  [FALLBACK] {ticker_symbol} → {fallback}")
-            stock = yf.Ticker(fallback)
-            hist  = fetch_history(stock, "2mo")
-            daily = fetch_history(stock, "6mo")
-
-        if len(hist) < 2 or len(daily) < 40:
-            print(f"  [SKIP] {ticker_symbol}: zu wenig Daten (hist={len(hist)}, daily={len(daily)})")
-            return None
-
-        daily_change      = (hist['Close'].iloc[-1] / hist['Close'].iloc[-2]  - 1) * 100
-        intraday_change   = (hist['Close'].iloc[-1] / hist['Open'].iloc[-1]   - 1) * 100
-        five_day_change   = (hist['Close'].iloc[-1] / hist['Close'].iloc[-6]  - 1) * 100 if len(hist) >= 6  else None
-        twenty_day_change = (hist['Close'].iloc[-1] / hist['Close'].iloc[-21] - 1) * 100 if len(hist) >= 21 else None
-
-        sma50          = calculate_sma(daily)
-        atr            = calculate_atr(daily)
-        current_close  = daily['Close'].iloc[-1]
-        atr_pct        = (atr / current_close) * 100 if atr and current_close else None
-        dist_sma50_atr = (100 * (current_close / sma50 - 1) / atr_pct) if (sma50 and atr_pct and atr_pct != 0) else None
-        abc_rating     = calculate_abc_rating(daily)
-
-        rs_sts     = None
-        rrs_data   = None
-        now        = now_berlin()
-        end_naive  = datetime(now.year, now.month, now.day, now.hour, now.minute)
-        start_naive= end_naive - timedelta(days=120)
-        try:
-            stock_history = fetch_history_range(stock, start_naive, end_naive)
-            spy_history   = fetch_history_range(yf.Ticker("SPY"), start_naive, end_naive)
-            if not stock_history.empty and not spy_history.empty:
-                rrs_data = calculate_rrs(stock_history, spy_history,
-                                         atr_length=14, length_rolling=50,
-                                         length_sma=20, atr_multiplier=1.0)
-                if rrs_data is not None and len(rrs_data) >= 21:
-                    recent_21 = rrs_data['rollingRRS'].iloc[-21:]
-                    ranks     = rankdata(recent_21, method='average')
-                    rs_sts    = ((ranks[-1] - 1) / (len(recent_21) - 1)) * 100
-        except Exception as e:
-            print("RRS error", ticker_symbol, e)
-
-        rs_chart_path = (
-            create_rs_chart_png(rrs_data, ticker_symbol, charts_dir)
-            if rrs_data is not None and len(rrs_data) > 0 else None
-        )
-        long_etfs, short_etfs = get_leveraged_etfs(ticker_symbol)
-
-        return {
-            "ticker":         ticker_symbol,
-            "daily":          round(daily_change,      2) if daily_change      is not None else None,
-            "intra":          round(intraday_change,   2) if intraday_change   is not None else None,
-            "5d":             round(five_day_change,   2) if five_day_change   is not None else None,
-            "20d":            round(twenty_day_change, 2) if twenty_day_change is not None else None,
-            "atr_pct":        round(atr_pct,           1) if atr_pct           is not None else None,
-            "dist_sma50_atr": round(dist_sma50_atr,   2) if dist_sma50_atr   is not None else None,
-            "rs":             round(rs_sts,             0) if rs_sts            is not None else None,
-            "rs_chart":       rs_chart_path,
-            "long":           long_etfs,
-            "short":          short_etfs,
-            "abc":            abc_rating,
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Chart Viewer</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; height: 100vh; background-color: #1a1a1a; color: #e0e0e0; }
+        .ticker-table th.sorted-column { background-color: #3b4a6b !important; }
+        .ticker-table td.sorted-column { background-color: #2a3441; }
+        .ticker-list { width: 800px; background-color: #1a1a1a; padding: 0; overflow-y: auto; border-right: 1px solid #333; }
+        .chart-container { flex: 1; display: flex; flex-direction: column; padding: 10px; background-color: #1a1a1a; min-height: 0; }
+        .group-container { margin-bottom: 15px; }
+        .group-header {
+            background-color: #2d3748; padding: 6px 8px; font-weight: bold; font-size: 0.9em;
+            display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+            position: sticky; top: 0; z-index: 3; cursor: pointer; color: #e0e0e0; border-bottom: 1px solid #444;
         }
-    except Exception as e:
-        print("Error", ticker_symbol, e)
-        return None
-
-
-# ─── Main ─────────────────────────────────────────────────────────────────────
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--out-dir", default="data")
-    args       = parser.parse_args()
-    out_dir    = args.out_dir
-    charts_dir = os.path.join(out_dir, "charts")
-    os.makedirs(charts_dir, exist_ok=True)
-
-    now_mez = now_berlin()
-    print(f"Build gestartet: {now_mez.strftime('%d.%m.%Y %H:%M %Z')}")
-
-    print("Fetching economic events...")
-    events = get_upcoming_key_events()
-
-    print("Fetching stock data...")
-    groups_data     = {}
-    all_ticker_data = {}
-
-    for group_name, tickers in STOCK_GROUPS.items():
-        rows = []
-        for i, ticker in enumerate(tickers):
-            print(f"  [{group_name}] {i+1}/{len(tickers)} {ticker}")
-
-            # FIX 3: Retry-Logik gegen Rate-Limiting (3 Versuche)
-            row = None
-            for attempt in range(3):
-                row = get_stock_data(ticker, charts_dir)
-                if row:
-                    break
-                if attempt < 2:
-                    print(f"  [RETRY {attempt+1}/2] {ticker} – warte 3s...")
-                    time.sleep(3)
-
-            if row:
-                rows.append(row)
-                all_ticker_data[ticker] = row
-            else:
-                print(f"  [FAILED] {ticker} nach 3 Versuchen übersprungen")
-
-            time.sleep(0.2)   # kurze Pause zwischen Tickern
-        groups_data[group_name] = rows
-
-    print("Computing column ranges...")
-    column_ranges = {}
-    for group_name, rows in groups_data.items():
-        daily_v  = [r["daily"] for r in rows if r.get("daily")  is not None]
-        intra_v  = [r["intra"] for r in rows if r.get("intra")  is not None]
-        five_v   = [r["5d"]    for r in rows if r.get("5d")     is not None]
-        twenty_v = [r["20d"]   for r in rows if r.get("20d")    is not None]
-        column_ranges[group_name] = {
-            "daily": (min(daily_v)  if daily_v  else -10, max(daily_v)  if daily_v  else 10),
-            "intra": (min(intra_v)  if intra_v  else -10, max(intra_v)  if intra_v  else 10),
-            "5d":    (min(five_v)   if five_v   else -20, max(five_v)   if five_v   else 20),
-            "20d":   (min(twenty_v) if twenty_v else -30, max(twenty_v) if twenty_v else 30),
+        .group-header:hover { background-color: #374151; }
+        .legend { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .legend-item { padding: 2px 6px; border-radius: 6px; font-size: 0.75em; color: white; user-select: none; }
+        .ticker-table { width: 100%; border-collapse: collapse; font-size: 0.85em; table-layout: fixed; }
+        .ticker-table th:nth-child(3), .ticker-table td:nth-child(3) { width: 59px; padding: 6px 4px; overflow: hidden; }
+        .ticker-table th:nth-child(4), .ticker-table td:nth-child(4) { width: 59px; padding: 6px 4px; overflow: hidden; }
+        .ticker-table th:nth-child(5), .ticker-table td:nth-child(5) { width: 59px; padding: 6px 4px; overflow: hidden; }
+        .ticker-table th:nth-child(6), .ticker-table td:nth-child(6) { width: 59px; padding: 6px 4px; overflow: hidden; }
+        .ticker-table th:nth-child(10), .ticker-table td:nth-child(10) { width: 110px; padding: 2px 4px; overflow: hidden; }
+        .ticker-table thead { position: sticky; z-index: 2; }
+        .ticker-table th {
+            text-align: left; padding: 6px 8px; background-color: #2d3748; cursor: pointer; user-select: none;
+            font-weight: bold; border-bottom: 1px solid #444; color: #e0e0e0;
         }
+        .ticker-table th:hover { background-color: #374151; }
+        .ticker-table th.sortable { cursor: pointer; }
+        .ticker-table th.sortable:hover { color: #fff; }
+        .ticker-table th.sort-asc::after { content: " ↑"; }
+        .ticker-table th.sort-desc::after { content: " ↓"; }
+        .ticker-table td { padding: 6px 8px; border-bottom: 1px solid #333; vertical-align: middle; color: #e0e0e0; }
+        .ticker-row { cursor: pointer; transition: all 0.2s; }
+        .ticker-row:hover { background-color: #2a2a2a; }
+        .ticker-row.active { background-color: #374151; }
+        .ticker-table td.price-up { color: #10b981 !important; font-weight: bold; }
+        .ticker-table td.price-down { color: #ef4444 !important; font-weight: bold; }
+        .value-visualization { position: relative; display: inline-block; padding: 2px 4px; border-radius: 3px; min-width: 45px; max-width: 100%; text-align: right; }
+        .value-bar { position: absolute; top: 0; height: 100%; border-radius: 3px; opacity: 0.2; z-index: 0; max-width: 100%; }
+        .value-bar.positive { background-color: #10b981; left: 0; right: auto; }
+        .value-bar.negative { background-color: #ef4444; right: 0; left: auto; }
+        .value-text { position: relative; z-index: 1; }
+        .rs-chart { width: 100%; max-width: 100px; height: 30px; display: block; object-fit: contain; }
+        .tradingview-widget-container { flex: 1; min-height: 0; }
+        .key-hint {
+            font-size: 11px; color: #9ca3af; margin-top: 15px; padding: 5px;
+            background-color: #2d3748; border-radius: 3px;
+            position: sticky; bottom: 0; border: 1px solid #444;
+        }
+        /* ── Zeitstempel-Zeile ── */
+        .timestamp-bar {
+            background-color: #1e2433;
+            border-bottom: 1px solid #2d3748;
+            padding: 4px 8px;
+            font-size: 0.75em;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .timestamp-bar .ts-label { color: #475569; }
+        .timestamp-bar .ts-value { color: #94a3b8; font-weight: 600; }
+        .long-etf { color: #4ade80; cursor: pointer; text-decoration: underline; }
+        .short-etf { color: #f87171; cursor: pointer; text-decoration: underline; }
+        .etf-list { white-space: nowrap; font-size: 0.8em; }
+        .etf-list span:hover { font-weight: bold; }
+        .ticker-label { display: inline-block; padding: 2px 8px; border-radius: 12px; background-color: #4a5568; color: #e0e0e0; }
+        .abc-rating { display: inline-block; width: 20px; height: 20px; border-radius: 50%; text-align: center; line-height: 20px; font-weight: bold; color: white; }
+        .abc-a { background-color: #3b82f6; }
+        .abc-b { background-color: #10b981; }
+        .abc-c { background-color: #f59e0b; }
+        .economic-events { margin-bottom: 10px; }
+        .events-button,
+        .column-guide-btn {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: #2d3748;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            border: 1px solid #4a5568;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        .events-button:hover,
+        .column-guide-btn:hover { background-color: #374151; }
+        .events-content {
+            display: none; position: absolute; top: 100%; left: 0; right: 0; background-color: #2d3748;
+            min-width: 100%; z-index: 1000; border-radius: 4px; max-height: 400px; overflow-y: auto;
+            padding: 10px 12px; border: 1px solid #4a5568; margin-top: 4px;
+            font-family: Arial, sans-serif; font-size: 0.8em; color: #e0e0e0; line-height: 1.5;
+        }
+        .economic-events:hover .events-content { display: block; }
+        .event-item {
+            padding: 10px 12px; border-bottom: 1px solid #4a5568; background-color: #1a1a1a;
+            font-family: Arial, sans-serif; font-size: 0.8em; line-height: 1.5;
+        }
+        .event-item:hover { background-color: #374151; }
+        .event-item:last-child { border-bottom: none; }
+        .event-item .event-datetime { font-weight: bold; color: #a5b4fc; }
+        .event-item .event-name { color: #cbd5e1; }
+        .column-guide { margin-bottom: 10px; position: relative; }
+        .column-guide-content {
+            display: none; position: absolute; top: 100%; left: 0; right: 0; background-color: #2d3748;
+            z-index: 999; border-radius: 4px; max-height: 420px; overflow-y: auto; padding: 10px 12px;
+            border: 1px solid #4a5568; margin-top: 4px; font-size: 0.8em; color: #e0e0e0; line-height: 1.5;
+        }
+        .column-guide:hover .column-guide-content { display: block; }
+        .column-guide dl { margin: 0; }
+        .column-guide dt { font-weight: bold; color: #a5b4fc; margin-top: 8px; }
+        .column-guide dt:first-child { margin-top: 0; }
+        .column-guide dd { margin: 2px 0 0 12px; color: #cbd5e1; }
+        .loading-msg { padding: 20px; text-align: center; color: #9ca3af; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1a1a; }
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="ticker-list">
 
-    snapshot = {
-        # FIX 7: ISO-Zeitstempel mit MEZ/MESZ-Offset (z.B. 2025-03-01T17:30:00+01:00)
-        "built_at":       now_mez.isoformat(timespec='seconds'),
-        "built_at_label": now_mez.strftime('%d.%m.%Y %H:%M %Z'),
-        "groups":         groups_data,
-        "column_ranges":  column_ranges,
+        <!-- ── Zeitstempel MEZ/MESZ ── -->
+        <div class="timestamp-bar">
+            <span class="ts-label">Stand:</span>
+            <span class="ts-value" id="timestamp-display">–</span>
+        </div>
+
+        <div class="economic-events" style="position:relative">
+            <button class="events-button">📅 MACRO EVENTS</button>
+            <div class="events-content" id="events-content"></div>
+        </div>
+        <div class="column-guide" style="position:relative">
+            <button class="column-guide-btn" type="button">📋 COLUMN GUIDE</button>
+            <div class="column-guide-content">
+                <dl>
+                    <dt>Grade</dt>
+                    <dd>ABC rating (A = EMA10 &gt; EMA20 &gt; SMA50 uptrend; B = mixed; C = downtrend).</dd>
+                    <dt>ATRx</dt>
+                    <dd>Distance from SMA50 in ATR units.</dd>
+                    <dt>1M-VARS</dt>
+                    <dd>Volatility Adjusted Relative Strength Stands vs SPY over last 21 days (0–100%).</dd>
+                </dl>
+            </div>
+        </div>
+        <div id="groups-container"></div>
+        <div class="key-hint">↑ ↓ Use arrow keys to navigate · Data auto-refreshed daily via GitHub Actions · Yahoo Finance</div>
+    </div>
+    <div class="chart-container">
+        <div class="tradingview-widget-container">
+            <div id="tradingview-chart" style="height:100%;width:100%;"></div>
+            <div style="color:#9ca3af;font-size:11px;margin-top:4px;">
+                <a href="https://www.tradingview.com/" target="_blank" rel="noopener" style="color:#9ca3af;">Track all markets on TradingView</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+(function() {
+    let chartWidget = null;
+    let currentIndex = 0;
+    let allTickerRows = [];
+    let currentSortStates = {};
+    let snapshot = null;
+    let meta = null;
+
+    function safeGroupId(name) {
+        return name.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+    function escapeHtml(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    # FIX 8: default_symbol greift dynamisch auf ersten Gruppen-Key zu
-    first_group = list(STOCK_GROUPS.keys())[0]
-    meta = {
-        "SECTOR_COLORS":     SECTOR_COLORS,
-        "TICKER_TO_SECTOR":  TICKER_TO_SECTOR,
-        "Industries_COLORS": Industries_COLORS,
-        "SECTOR_ORDER":      list(SECTOR_COLORS.keys()),
-        "default_symbol":    STOCK_GROUPS[first_group][0] if STOCK_GROUPS[first_group] else "SPY",
+    function vizWidth(value, minVal, maxVal) {
+        if (value == null) return 0;
+        if (minVal >= maxVal) return 0;
+        if (value >= 0) {
+            if (maxVal <= 0) return 0;
+            return Math.min(100, Math.max(0, (value / maxVal) * 100));
+        }
+        if (minVal >= 0) return 0;
+        return Math.min(100, Math.max(0, (Math.abs(value) / Math.abs(minVal)) * 100));
     }
 
-    snapshot_path = os.path.join(out_dir, "snapshot.json")
-    events_path   = os.path.join(out_dir, "events.json")
-    meta_path     = os.path.join(out_dir, "meta.json")
+    // ── Zeitstempel MEZ/MESZ ──────────────────────────────────────────────────
+    function renderTimestamp(snap) {
+        var el = document.getElementById('timestamp-display');
+        if (!el) return;
 
-    with open(snapshot_path, "w", encoding="utf-8") as f:
-        json.dump(snapshot, f, ensure_ascii=False, indent=2)
-    with open(events_path, "w", encoding="utf-8") as f:
-        json.dump(events, f, ensure_ascii=False, indent=2)
-    with open(meta_path, "w", encoding="utf-8") as f:
-        json.dump(meta, f, ensure_ascii=False, indent=2)
+        // Priorität 1: built_at_label direkt aus snapshot.json
+        // Erzeugt von build_data.py z.B. "01.03.2025 17:30 CET"
+        if (snap && snap.built_at_label) {
+            el.textContent = snap.built_at_label;
+            return;
+        }
 
-    print(f"Fertig: {now_berlin().strftime('%d.%m.%Y %H:%M %Z')}")
-    print("Wrote", snapshot_path, events_path, meta_path, "and charts in", charts_dir)
+        // Priorität 2: built_at als ISO-String → Browser konvertiert nach Europe/Berlin
+        if (snap && snap.built_at) {
+            try {
+                var d = new Date(snap.built_at);
+                el.textContent = d.toLocaleString('de-DE', {
+                    timeZone:     'Europe/Berlin',
+                    day:          '2-digit',
+                    month:        '2-digit',
+                    year:         'numeric',
+                    hour:         '2-digit',
+                    minute:       '2-digit',
+                    timeZoneName: 'short'   // zeigt "MEZ" oder "MESZ"
+                });
+            } catch (e) {
+                el.textContent = snap.built_at;
+            }
+            return;
+        }
 
+        el.textContent = '–';
+    }
 
-if __name__ == "__main__":
-    main()
+    function renderEvents(events) {
+        const el = document.getElementById('events-content');
+        if (!events || events.length === 0) {
+            el.innerHTML = '<div class="event-item">No high-importance U.S. macro events in the next 7 days.</div>';
+            return;
+        }
+        el.innerHTML = events.map(function(e) {
+            return '<div class="event-item"><span class="event-datetime">' + (e.date || '') + ' ' + (e.time || '') + '</span><span class="event-name"> · ' + (e.event || '') + '</span></div>';
+        }).join('');
+    }
+
+    function getGroupLabelClass(groupName, ticker) {
+        if (groupName === 'Industries' && meta && meta.Industries_COLORS && meta.Industries_COLORS[ticker])
+            return 'ticker-label-' + ticker;
+        var safe = groupName.replace(/\s+/g, '-').replace(/&/g, '-');
+        return 'ticker-label-' + safe;
+    }
+
+    function renderGroups() {
+        if (!snapshot || !snapshot.groups) {
+            document.getElementById('groups-container').innerHTML = '<div class="loading-msg">LOADING DATA...</div>';
+            return;
+        }
+        var html = '';
+        var groupOrder = ['Indices', 'S&P Style ETFs', 'Sel Sectors', 'EW Sectors', 'Industries', 'Countries'];
+        for (var g = 0; g < groupOrder.length; g++) {
+            var groupName = groupOrder[g];
+            var rows = snapshot.groups[groupName];
+            if (!rows || rows.length === 0) continue;
+            var safeId = safeGroupId(groupName);
+            var ranges = (snapshot.column_ranges && snapshot.column_ranges[groupName]) || { daily: [-10,10], intra: [-10,10], '5d': [-20,20], '20d': [-30,30] };
+            html += '<div class="group-container" id="group-' + safeId + '">';
+            html += '<div class="group-header" onclick="scrollToGroup(\'' + groupName.replace(/'/g, "\\'") + '\')">';
+            html += '<span>' + groupName + '</span>';
+            if (groupName === 'Industries' && meta && meta.SECTOR_COLORS) {
+                html += '<div class="legend" onclick="event.stopPropagation()">';
+                for (var s in meta.SECTOR_COLORS)
+                    html += '<span class="legend-item" style="background-color:' + meta.SECTOR_COLORS[s] + '">' + s + '</span>';
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '<table class="ticker-table" data-group="' + escapeHtml(groupName) + '"><thead><tr>';
+            var th = function(key, label) { return '<th class="sortable" data-sort-by="' + key + '" title="Click to sort">' + label + '</th>'; };
+            html += th('symbol', 'Ticker');
+            html += th('abc', 'Grade');
+            html += th('daily', 'Daily');
+            html += th('intra', 'Intra');
+            html += th('5d', '5D');
+            html += th('20d', '20D');
+            html += th('atr_pct', 'ATR%');
+            html += th('dist_sma50_atr', 'ATRx');
+            html += th('rs', '1M-VARS');
+            html += th('rs', 'VARS');
+            html += th('letf', 'LETF');
+            html += '</tr></thead><tbody id="' + safeId + '-body">';
+            for (var i = 0; i < rows.length; i++) {
+                var r = rows[i];
+                var daily = r.daily, intra = r.intra, five = r['5d'], twenty = r['20d'];
+                var dailyW = vizWidth(daily, ranges.daily[0], ranges.daily[1]);
+                var intraW = vizWidth(intra, ranges.intra[0], ranges.intra[1]);
+                var fiveW = vizWidth(five, ranges['5d'][0], ranges['5d'][1]);
+                var twentyW = vizWidth(twenty, ranges['20d'][0], ranges['20d'][1]);
+                var dailyCl = daily != null ? (daily > 0 ? 'price-up' : (daily < 0 ? 'price-down' : '')) : '';
+                var intraCl = intra != null ? (intra > 0 ? 'price-up' : (intra < 0 ? 'price-down' : '')) : '';
+                var fiveCl = five != null ? (five > 0 ? 'price-up' : (five < 0 ? 'price-down' : '')) : '';
+                var twentyCl = twenty != null ? (twenty > 0 ? 'price-up' : (twenty < 0 ? 'price-down' : '')) : '';
+                var letf = (r.long && r.long.length) || (r.short && r.short.length) ? '1' : '0';
+                var abc = r.abc || '';
+                var rs = r.rs != null ? r.rs : 0;
+                var atrPct = r.atr_pct != null ? r.atr_pct : 0;
+                var dist = r.dist_sma50_atr != null ? r.dist_sma50_atr : 0;
+                var labelClass = getGroupLabelClass(groupName, r.ticker);
+                html += '<tr class="ticker-row" onclick="updateChart(\'' + r.ticker + '\', this)" data-symbol="' + r.ticker + '" data-group="' + groupName.replace(/"/g, '&quot;') + '" data-daily="' + (daily != null ? daily : 0) + '" data-intra="' + (intra != null ? intra : 0) + '" data-5d="' + (five != null ? five : 0) + '" data-20d="' + (twenty != null ? twenty : 0) + '" data-atr_pct="' + atrPct + '" data-dist_sma50_atr="' + dist + '" data-rs="' + rs + '" data-abc="' + abc + '" data-letf="' + letf + '" data-index="' + i + '">';
+                html += '<td><span class="ticker-label ' + labelClass + '">' + r.ticker + '</span></td>';
+                html += '<td>' + (abc ? '<span class="abc-rating abc-' + abc.toLowerCase() + '">' + abc + '</span>' : '-') + '</td>';
+                html += '<td class="' + dailyCl + '">' + (daily != null ? '<div class="value-visualization"><div class="value-bar ' + (daily >= 0 ? 'positive' : 'negative') + '" style="width:' + dailyW + '%"></div><span class="value-text">' + (daily >= 0 ? '+' : '') + daily.toFixed(2) + '%</span></div>' : 'N/A') + '</td>';
+                html += '<td class="' + intraCl + '">' + (intra != null ? '<div class="value-visualization"><div class="value-bar ' + (intra >= 0 ? 'positive' : 'negative') + '" style="width:' + intraW + '%"></div><span class="value-text">' + (intra >= 0 ? '+' : '') + intra.toFixed(2) + '%</span></div>' : 'N/A') + '</td>';
+                html += '<td class="' + fiveCl + '">' + (five != null ? '<div class="value-visualization"><div class="value-bar ' + (five >= 0 ? 'positive' : 'negative') + '" style="width:' + fiveW + '%"></div><span class="value-text">' + (five >= 0 ? '+' : '') + five.toFixed(2) + '%</span></div>' : 'N/A') + '</td>';
+                html += '<td class="' + twentyCl + '">' + (twenty != null ? '<div class="value-visualization"><div class="value-bar ' + (twenty >= 0 ? 'positive' : 'negative') + '" style="width:' + twentyW + '%"></div><span class="value-text">' + (twenty >= 0 ? '+' : '') + twenty.toFixed(2) + '%</span></div>' : 'N/A') + '</td>';
+                html += '<td>' + (r.atr_pct != null ? r.atr_pct.toFixed(1) + '%' : 'N/A') + '</td>';
+                html += '<td>' + (r.dist_sma50_atr != null ? r.dist_sma50_atr.toFixed(2) : 'N/A') + '</td>';
+                html += '<td>' + (r.rs != null ? Math.round(r.rs) + '%' : 'N/A') + '</td>';
+                html += '<td>' + (r.rs_chart ? '<img src="' + r.rs_chart + '" class="rs-chart" alt="RS">' : 'N/A') + '</td>';
+                html += '<td class="etf-list">';
+                if (r.long && r.long.length) html += r.long.map(function(etf){ return '<span class="long-etf" onclick="event.stopPropagation();updateChart(\'' + etf + '\')">' + etf + '</span>'; }).join(', ');
+                if (r.short && r.short.length) { if (r.long && r.long.length) html += '<br>'; html += r.short.map(function(etf){ return '<span class="short-etf" onclick="event.stopPropagation();updateChart(\'' + etf + '\')">' + etf + '</span>'; }).join(', '); }
+                if (!(r.long && r.long.length) && !(r.short && r.short.length)) html += '-';
+                html += '</td></tr>';
+            }
+            html += '</tbody></table></div>';
+        }
+        document.getElementById('groups-container').innerHTML = html;
+
+        // Inject dynamic styles for Industries ticker colors
+        if (meta && meta.Industries_COLORS) {
+            var style = document.createElement('style');
+            var css = '';
+            for (var t in meta.Industries_COLORS)
+                css += '.ticker-label-' + t + '{background-color:' + meta.Industries_COLORS[t] + ';color:white} ';
+            style.textContent = css;
+            document.head.appendChild(style);
+        }
+
+        initApp();
+    }
+
+    function initChart(symbol) {
+        if (chartWidget) { chartWidget.remove(); chartWidget = null; }
+        chartWidget = new TradingView.widget({
+            allow_symbol_change: true, calendar: false, details: true, hide_side_toolbar: false, hide_top_toolbar: false,
+            hide_legend: false, hide_volume: true, hotlist: false, interval: 'D', locale: 'en', save_image: false,
+            style: '1', symbol: symbol, theme: 'dark', timezone: 'America/Toronto', toolbar_bg: '#1a1a1a', backgroundColor: '#1a1a1a',
+            gridColor: 'rgba(255,255,255,0.1)', watchlist: [], withdateranges: true, studies: ['STD;MA%Ribbon', 'Volume@tv-basicstudies'],
+            autosize: true, enable_publishing: false, container_id: 'tradingview-chart'
+        });
+    }
+
+    window.updateChart = function(symbol, element) {
+        allTickerRows.forEach(function(row) { row.classList.remove('active'); });
+        if (element) {
+            element.classList.add('active');
+            currentIndex = allTickerRows.indexOf(element);
+        } else {
+            var row = [].slice.call(document.querySelectorAll('.ticker-row')).filter(function(r) { return r.getAttribute('data-symbol') === symbol; })[0];
+            if (row) { row.classList.add('active'); currentIndex = allTickerRows.indexOf(row); }
+        }
+        initChart(symbol);
+        var activeRow = document.querySelector('.ticker-row.active');
+        if (activeRow) activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    window.scrollToGroup = function(groupName) {
+        var el = document.getElementById('group-' + safeGroupId(groupName));
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.sortGroup = function(group, sortBy) {
+        var tables = document.querySelectorAll('.ticker-table');
+        var table = null;
+        for (var t = 0; t < tables.length; t++) {
+            if (tables[t].getAttribute('data-group') === group) { table = tables[t]; break; }
+        }
+        if (!table) return;
+        var tbody = table.querySelector('tbody');
+        var rows = [].slice.call(tbody.querySelectorAll('.ticker-row'));
+        var state = currentSortStates[group] || { sortBy: null, direction: 1, count: 0 };
+        currentSortStates[group] = state;
+
+        table.querySelectorAll('th, td').forEach(function(el) { el.classList.remove('sort-asc', 'sort-desc', 'sorted-column'); });
+
+        if (state.sortBy === sortBy) {
+            state.count++;
+            if (state.count >= 3) {
+                state.sortBy = null; state.direction = 1; state.count = 0;
+                rows.sort(function(a, b) { return parseInt(a.getAttribute('data-index')) - parseInt(b.getAttribute('data-index')); });
+                tbody.innerHTML = ''; rows.forEach(function(r) { tbody.appendChild(r); });
+                updateAllTickerRows(); return;
+            }
+        } else state.count = 1;
+        state.sortBy = sortBy;
+        if (state.count === 2) state.direction *= -1; else state.direction = 1;
+
+        var colMap = { symbol: 0, abc: 1, daily: 2, intra: 3, '5d': 4, '20d': 5, atr_pct: 6, dist_sma50_atr: 7, rs: 8, letf: 10 };
+        var hi = colMap[sortBy] !== undefined ? colMap[sortBy] : 9;
+        var headerIndices = (sortBy === 'rs') ? [8, 9] : [hi];
+        headerIndices.forEach(function(idx) {
+            var h = table.querySelectorAll('th')[idx];
+            if (h) h.classList.add(state.direction === 1 ? 'sort-asc' : 'sort-desc', 'sorted-column');
+        });
+        rows.forEach(function(row) {
+            var cells = row.querySelectorAll('td');
+            headerIndices.forEach(function(idx) { if (cells[idx]) cells[idx].classList.add('sorted-column'); });
+        });
+
+        var tickerToSector = (meta && meta.TICKER_TO_SECTOR) ? meta.TICKER_TO_SECTOR : {};
+        var sectorOrder = (meta && meta.SECTOR_ORDER) ? meta.SECTOR_ORDER : [];
+        function sectorIndex(s) { var i = sectorOrder.indexOf(s); return i >= 0 ? i : sectorOrder.length; }
+
+        rows.sort(function(a, b) {
+            var aVal, bVal;
+            if (sortBy === 'symbol') {
+                if (group === 'Industries') {
+                    var aT = a.getAttribute('data-symbol'), bT = b.getAttribute('data-symbol');
+                    var aS = tickerToSector[aT] || 'Unknown', bS = tickerToSector[bT] || 'Unknown';
+                    if (sectorIndex(aS) !== sectorIndex(bS)) return (sectorIndex(aS) - sectorIndex(bS)) * state.direction;
+                    return (aT.toLowerCase().localeCompare(bT.toLowerCase())) * state.direction;
+                }
+                return (a.getAttribute('data-symbol').toLowerCase().localeCompare(b.getAttribute('data-symbol').toLowerCase())) * state.direction;
+            } else if (sortBy === 'abc') {
+                return ((a.getAttribute('data-abc') || '').localeCompare(b.getAttribute('data-abc') || '')) * state.direction;
+            } else if (sortBy === 'letf') {
+                return (parseInt(a.getAttribute('data-letf') || '0') - parseInt(b.getAttribute('data-letf') || '0')) * state.direction;
+            } else {
+                return (parseFloat(a.getAttribute('data-' + sortBy)) - parseFloat(b.getAttribute('data-' + sortBy))) * state.direction;
+            }
+        });
+        tbody.innerHTML = ''; rows.forEach(function(r) { tbody.appendChild(r); });
+        updateAllTickerRows();
+        var ar = document.querySelector('.ticker-row.active');
+        if (ar) currentIndex = allTickerRows.indexOf(ar);
+    };
+
+    function updateAllTickerRows() {
+        allTickerRows = [];
+        document.querySelectorAll('.ticker-table').forEach(function(table) {
+            [].slice.call(table.querySelectorAll('.ticker-row')).forEach(function(row) { allTickerRows.push(row); });
+        });
+    }
+
+    function initApp() {
+        allTickerRows = [].slice.call(document.querySelectorAll('.ticker-row'));
+        document.querySelectorAll('.ticker-table').forEach(function(table) {
+            var g = table.getAttribute('data-group');
+            currentSortStates[g] = { sortBy: null, direction: 1, count: 0 };
+        });
+        var listEl = document.querySelector('.ticker-list');
+        if (listEl && !listEl._sortDelegate) {
+            listEl._sortDelegate = true;
+            listEl.addEventListener('click', function(ev) {
+                var th = ev.target.closest('th.sortable');
+                if (!th) return;
+                var table = th.closest('table.ticker-table');
+                if (!table) return;
+                var group = table.getAttribute('data-group');
+                var sortBy = th.getAttribute('data-sort-by');
+                if (group && sortBy) window.sortGroup(group, sortBy);
+            });
+        }
+        var defaultSymbol = (meta && meta.default_symbol) ? meta.default_symbol : 'QQQE';
+        initChart(defaultSymbol);
+        if (allTickerRows.length > 0) {
+            allTickerRows[0].classList.add('active');
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowDown') { e.preventDefault(); if (currentIndex < allTickerRows.length - 1) { currentIndex++; updateChart(allTickerRows[currentIndex].getAttribute('data-symbol'), allTickerRows[currentIndex]); } }
+            if (e.key === 'ArrowUp')   { e.preventDefault(); if (currentIndex > 0) { currentIndex--; updateChart(allTickerRows[currentIndex].getAttribute('data-symbol'), allTickerRows[currentIndex]); } }
+        });
+    }
+
+    function loadData() {
+        Promise.all([
+            fetch('data/snapshot.json?_=' + Date.now()).then(function(res) { return res.ok ? res.json() : null; }).catch(function() { return null; }),
+            fetch('data/events.json?_='  + Date.now()).then(function(res) { return res.ok ? res.json() : []; }).catch(function() { return []; }),
+            fetch('data/meta.json?_='    + Date.now()).then(function(res) { return res.ok ? res.json() : null; }).catch(function() { return null; })
+        ]).then(function(results) {
+            snapshot = results[0];
+            var events = results[1];
+            meta = results[2];
+
+            // ── Zeitstempel setzen ──
+            renderTimestamp(snapshot);
+
+            renderEvents(events);
+            renderGroups();
+        }).catch(function() {
+            document.getElementById('groups-container').innerHTML = '<div class="loading-msg">LOADING DATA... (Run scripts/build_data.py or wait for GitHub Actions)</div>';
+        });
+    }
+
+    loadData();
+})();
+    </script>
+</body>
+</html>
