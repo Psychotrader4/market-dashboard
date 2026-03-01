@@ -3,6 +3,16 @@ Build dashboard data for static GitHub Pages deployment.
 Run from repo root: python scripts/build_data.py [--out-dir data]
 Outputs: data/snapshot.json, data/events.json, data/meta.json, data/charts/*.png
 Timezone: Europe/Berlin (MEZ/MESZ)
+
+Fixes:
+  - FIX 1: flatten_columns() → löst yfinance MultiIndex-Problem (ab v0.2.38)
+  - FIX 2: period="2mo" für hist → genug Tage auch bei Feiertagsmonaten
+  - FIX 3: Retry-Logik (3 Versuche) gegen Rate-Limiting
+  - FIX 4: pd.to_datetime(index.date) → Timezone-Mismatch Xetra vs. US
+  - FIX 5: period="6mo" für daily → sicher >= 40 Handelstage
+  - FIX 6: Fallback .DE → .L für Xetra-Ticker
+  - FIX 7: Zeitstempel in MEZ/MESZ (Europe/Berlin)
+  - FIX 8: default_symbol greift dynamisch auf ersten Gruppen-Key zu
 """
 from __future__ import print_function
 import argparse
@@ -90,6 +100,8 @@ Industries_COLORS = {
 }
 
 
+# ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
+
 def get_ticker_to_sector_mapping():
     color_to_sector = {c: s for s, c in SECTOR_COLORS.items()}
     return {t: color_to_sector.get(c, "Broad Market") for t, c in Industries_COLORS.items()}
@@ -103,11 +115,33 @@ def now_berlin() -> datetime:
     return datetime.now(TZ_BERLIN)
 
 
+def flatten_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    FIX 1: yfinance >= 0.2.38 gibt bei manchen Tickern einen MultiIndex zurück.
+    z.B. ('Close', 'ACWI') statt 'Close' → KeyError ohne diesen Fix.
+    """
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+    return df
+
+
+def fetch_history(ticker_obj, period: str) -> pd.DataFrame:
+    """Wrapper: history() + flatten_columns() in einem Schritt."""
+    return flatten_columns(ticker_obj.history(period=period))
+
+
+def fetch_history_range(ticker_obj, start, end) -> pd.DataFrame:
+    """Wrapper: history(start, end) + flatten_columns()."""
+    return flatten_columns(ticker_obj.history(start=start, end=end))
+
+
 def get_leveraged_etfs(ticker):
     if ticker in LEVERAGED_ETFS:
         return LEVERAGED_ETFS[ticker].get("long", []), LEVERAGED_ETFS[ticker].get("short", [])
     return [], []
 
+
+# ─── Wirtschaftskalender ──────────────────────────────────────────────────────
 
 def get_upcoming_key_events(days_ahead=7):
     if investpy is None:
@@ -137,6 +171,8 @@ def get_upcoming_key_events(days_ahead=7):
         return []
 
 
+# ─── Indikatoren ──────────────────────────────────────────────────────────────
+
 def calculate_atr(hist_data, period=14):
     try:
         hl = hist_data['High'] - hist_data['Low']
@@ -151,13 +187,12 @@ def calculate_atr(hist_data, period=14):
 def calculate_rrs(stock_data, spy_data, atr_length=14, length_rolling=50, length_sma=20, atr_multiplier=1.0):
     """
     Relative Rotation Strength.
-    Timestamps werden auf reines Datum normalisiert →
+    FIX 4: pd.to_datetime(index.date) normalisiert Timestamps auf Tagesbasis →
     löst Timezone-Mismatch zwischen Xetra (.DE) und US-Tickern.
     """
     try:
         stock_data = stock_data.copy()
         spy_data   = spy_data.copy()
-        # Timezone-Info entfernen, auf Tagesbasis normalisieren
         stock_data.index = pd.to_datetime(stock_data.index.date)
         spy_data.index   = pd.to_datetime(spy_data.index.date)
 
@@ -215,6 +250,8 @@ def calculate_abc_rating(hist_data):
     return None
 
 
+# ─── Chart ────────────────────────────────────────────────────────────────────
+
 def create_rs_chart_png(rrs_data, ticker, charts_dir):
     try:
         recent = rrs_data.tail(20)
@@ -250,19 +287,24 @@ def create_rs_chart_png(rrs_data, ticker, charts_dir):
         return None
 
 
+# ─── Kerndaten pro Ticker ─────────────────────────────────────────────────────
+
 def get_stock_data(ticker_symbol, charts_dir):
     try:
         stock = yf.Ticker(ticker_symbol)
-        hist  = stock.history(period="1mo")
-        daily = stock.history(period="6mo")
 
-        # Fallback auf Londoner Listing wenn .DE-Ticker leer
+        # FIX 1+2: flatten_columns + period="2mo" (genug Tage auch bei Feiertagen)
+        hist  = fetch_history(stock, "2mo")
+        # FIX 5: period="6mo" → sicher >= 40 Handelstage
+        daily = fetch_history(stock, "6mo")
+
+        # FIX 6: Fallback auf Londoner Listing wenn .DE-Ticker leer
         if (len(hist) < 2 or len(daily) < 40) and ticker_symbol.endswith(".DE"):
             fallback = ticker_symbol.replace(".DE", ".L")
             print(f"  [FALLBACK] {ticker_symbol} → {fallback}")
             stock = yf.Ticker(fallback)
-            hist  = stock.history(period="1mo")
-            daily = stock.history(period="6mo")
+            hist  = fetch_history(stock, "2mo")
+            daily = fetch_history(stock, "6mo")
 
         if len(hist) < 2 or len(daily) < 40:
             print(f"  [SKIP] {ticker_symbol}: zu wenig Daten (hist={len(hist)}, daily={len(daily)})")
@@ -286,9 +328,9 @@ def get_stock_data(ticker_symbol, charts_dir):
         end_naive  = datetime(now.year, now.month, now.day, now.hour, now.minute)
         start_naive= end_naive - timedelta(days=120)
         try:
-            stock_history = stock.history(start=start_naive, end=end_naive)
-            spy_history   = yf.Ticker("SPY").history(start=start_naive, end=end_naive)
-            if stock_history is not None and spy_history is not None:
+            stock_history = fetch_history_range(stock, start_naive, end_naive)
+            spy_history   = fetch_history_range(yf.Ticker("SPY"), start_naive, end_naive)
+            if not stock_history.empty and not spy_history.empty:
                 rrs_data = calculate_rrs(stock_history, spy_history,
                                          atr_length=14, length_rolling=50,
                                          length_sma=20, atr_multiplier=1.0)
@@ -324,6 +366,8 @@ def get_stock_data(ticker_symbol, charts_dir):
         return None
 
 
+# ─── Main ─────────────────────────────────────────────────────────────────────
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out-dir", default="data")
@@ -341,15 +385,29 @@ def main():
     print("Fetching stock data...")
     groups_data     = {}
     all_ticker_data = {}
+
     for group_name, tickers in STOCK_GROUPS.items():
         rows = []
         for i, ticker in enumerate(tickers):
             print(f"  [{group_name}] {i+1}/{len(tickers)} {ticker}")
-            row = get_stock_data(ticker, charts_dir)
+
+            # FIX 3: Retry-Logik gegen Rate-Limiting (3 Versuche)
+            row = None
+            for attempt in range(3):
+                row = get_stock_data(ticker, charts_dir)
+                if row:
+                    break
+                if attempt < 2:
+                    print(f"  [RETRY {attempt+1}/2] {ticker} – warte 3s...")
+                    time.sleep(3)
+
             if row:
                 rows.append(row)
                 all_ticker_data[ticker] = row
-            time.sleep(0.15)
+            else:
+                print(f"  [FAILED] {ticker} nach 3 Versuchen übersprungen")
+
+            time.sleep(0.2)   # kurze Pause zwischen Tickern
         groups_data[group_name] = rows
 
     print("Computing column ranges...")
@@ -367,13 +425,14 @@ def main():
         }
 
     snapshot = {
-        # ISO-Zeitstempel mit MEZ/MESZ-Offset (z.B. 2025-03-01T17:30:00+01:00)
+        # FIX 7: ISO-Zeitstempel mit MEZ/MESZ-Offset (z.B. 2025-03-01T17:30:00+01:00)
         "built_at":       now_mez.isoformat(timespec='seconds'),
         "built_at_label": now_mez.strftime('%d.%m.%Y %H:%M %Z'),
         "groups":         groups_data,
         "column_ranges":  column_ranges,
     }
 
+    # FIX 8: default_symbol greift dynamisch auf ersten Gruppen-Key zu
     first_group = list(STOCK_GROUPS.keys())[0]
     meta = {
         "SECTOR_COLORS":     SECTOR_COLORS,
