@@ -1,4 +1,3 @@
-
 """
 Build dashboard data for static GitHub Pages deployment.
 Run from repo root: python scripts/build_data.py [--out-dir data]
@@ -26,7 +25,7 @@ try:
 except ImportError:
     investpy = None
 
-# --- Config: no Liquid Stocks ---
+# --- Config ---
 KEY_EVENTS = [
     "Fed", "Federal Reserve", "Interest Rate", "FOMC",
     "ISM Manufacturing", "ISM Non-Manufacturing", "ISM Services", "ISM",
@@ -38,8 +37,9 @@ KEY_EVENTS = [
     "Beige Book", "Fed Minutes", "JOLTS", "Job Openings"
 ]
 
+# FIX 1: Duplikate entfernt (QQQ und RSP waren doppelt)
 STOCK_GROUPS = {
-    "Indices": ["SPY", "RSP", "QQQ", "QQQE", "QQQ", "RSP", "GLD", "SLV", "ACWI", "SPYI.DE", "VWCE.DE", "VGWE.DE"]
+    "Indices": ["SPY", "RSP", "QQQ", "QQQE", "GLD", "SLV", "ACWI", "SPYI.DE", "VWCE.DE", "VGWE.DE"]
 }
 
 LEVERAGED_ETFS = {
@@ -139,8 +139,15 @@ def calculate_atr(hist_data, period=14):
         return None
 
 
+# FIX 2: Timestamps auf reines Datum normalisieren → löst Timezone-Mismatch
+#         zwischen europäischen (.DE) und US-Tickern
 def calculate_rrs(stock_data, spy_data, atr_length=14, length_rolling=50, length_sma=20, atr_multiplier=1.0):
     try:
+        stock_data = stock_data.copy()
+        spy_data   = spy_data.copy()
+        stock_data.index = stock_data.index.normalize().tz_localize(None)
+        spy_data.index   = spy_data.index.normalize().tz_localize(None)
+
         merged = pd.merge(
             stock_data[['High', 'Low', 'Close']], spy_data[['High', 'Low', 'Close']],
             left_index=True, right_index=True, suffixes=('_stock', '_spy'), how='inner'
@@ -151,13 +158,13 @@ def calculate_rrs(stock_data, spy_data, atr_length=14, length_rolling=50, length
             h, l, c = merged[f'High_{prefix}'], merged[f'Low_{prefix}'], merged[f'Close_{prefix}']
             tr = pd.concat([h - l, (h - c.shift()).abs(), (l - c.shift()).abs()], axis=1).max(axis=1)
             merged[f'atr_{prefix}'] = tr.ewm(alpha=1/atr_length, adjust=False).mean()
-        sc = merged['Close_stock'] - merged['Close_stock'].shift(1)
-        spy_c = merged['Close_spy'] - merged['Close_spy'].shift(1)
-        spy_pi = spy_c / merged['atr_spy']
+        sc    = merged['Close_stock'] - merged['Close_stock'].shift(1)
+        spy_c = merged['Close_spy']   - merged['Close_spy'].shift(1)
+        spy_pi   = spy_c / merged['atr_spy']
         expected = spy_pi * merged['atr_stock'] * atr_multiplier
-        rrs = (sc - expected) / merged['atr_stock']
+        rrs         = (sc - expected) / merged['atr_stock']
         rolling_rrs = rrs.rolling(window=length_rolling, min_periods=1).mean()
-        rrs_sma = rolling_rrs.rolling(window=length_sma, min_periods=1).mean()
+        rrs_sma     = rolling_rrs.rolling(window=length_sma, min_periods=1).mean()
         return pd.DataFrame({'RRS': rrs, 'rollingRRS': rolling_rrs, 'RRS_SMA': rrs_sma}, index=merged.index)
     except Exception:
         return None
@@ -205,14 +212,14 @@ def create_rs_chart_png(rrs_data, ticker, charts_dir):
         fig.patch.set_facecolor('#1a1a1a')
         ax.set_facecolor('#1a1a1a')
         rolling_rrs = recent['rollingRRS'].values
-        rrs_sma = recent['RRS_SMA'].values
-        max_idx = rolling_rrs.argmax()
-        bar_colors = ['#4ade80' if i == max_idx else '#b0b0b0' for i in range(len(rolling_rrs))]
+        rrs_sma     = recent['RRS_SMA'].values
+        max_idx     = rolling_rrs.argmax()
+        bar_colors  = ['#4ade80' if i == max_idx else '#b0b0b0' for i in range(len(rolling_rrs))]
         ax.bar(range(len(rolling_rrs)), rolling_rrs, color=bar_colors, width=0.8, edgecolor='none')
         ax.plot(range(len(rrs_sma)), rrs_sma, color='yellow', lw=2)
         ax.axhline(y=0, color='#808080', linestyle='--', linewidth=1)
-        mn = min(rolling_rrs.min(), rrs_sma.min() if len(rrs_sma) else 0)
-        mx = max(rolling_rrs.max(), rrs_sma.max() if len(rrs_sma) else 0)
+        mn  = min(rolling_rrs.min(), rrs_sma.min() if len(rrs_sma) else 0)
+        mx  = max(rolling_rrs.max(), rrs_sma.max() if len(rrs_sma) else 0)
         pad = 0.1 if mn == mx else (mx - mn) * 0.2
         ax.set_ylim(mn - pad, mx + pad)
         ax.set_xticks([])
@@ -233,55 +240,64 @@ def create_rs_chart_png(rrs_data, ticker, charts_dir):
 def get_stock_data(ticker_symbol, charts_dir):
     try:
         stock = yf.Ticker(ticker_symbol)
-        hist = stock.history(period="21d")
-        daily = stock.history(period="60d")
-        if len(hist) < 2 or len(daily) < 50:
+        hist  = stock.history(period="21d")
+
+        # FIX 3: period="3mo" statt "60d" → ~63 Handelstage, sicher >= 50
+        #         Mindestanforderung auf 40 gesenkt (robuster für .DE-Ticker)
+        daily = stock.history(period="3mo")
+        if len(hist) < 2 or len(daily) < 40:
+            print(f"  [SKIP] {ticker_symbol}: zu wenig Daten (hist={len(hist)}, daily={len(daily)})")
             return None
 
-        daily_change = (hist['Close'].iloc[-1] / hist['Close'].iloc[-2] - 1) * 100
-        intraday_change = (hist['Close'].iloc[-1] / hist['Open'].iloc[-1] - 1) * 100
-        five_day_change = (hist['Close'].iloc[-1] / hist['Close'].iloc[-6] - 1) * 100 if len(hist) >= 6 else None
-        twenty_day_change = (hist['Close'].iloc[-1] / hist['Close'].iloc[-21] - 1) * 100 if len(hist) >= 21 else None
+        daily_change     = (hist['Close'].iloc[-1] / hist['Close'].iloc[-2] - 1) * 100
+        intraday_change  = (hist['Close'].iloc[-1] / hist['Open'].iloc[-1]  - 1) * 100
+        five_day_change  = (hist['Close'].iloc[-1] / hist['Close'].iloc[-6] - 1) * 100 if len(hist) >= 6  else None
+        twenty_day_change= (hist['Close'].iloc[-1] / hist['Close'].iloc[-21]- 1) * 100 if len(hist) >= 21 else None
 
-        sma50 = calculate_sma(daily)
-        atr = calculate_atr(daily)
-        current_close = daily['Close'].iloc[-1]
-        atr_pct = (atr / current_close) * 100 if atr and current_close else None
+        sma50        = calculate_sma(daily)
+        atr          = calculate_atr(daily)
+        current_close= daily['Close'].iloc[-1]
+        atr_pct      = (atr / current_close) * 100 if atr and current_close else None
         dist_sma50_atr = (100 * (current_close / sma50 - 1) / atr_pct) if (sma50 and atr_pct and atr_pct != 0) else None
-        abc_rating = calculate_abc_rating(daily)
+        abc_rating   = calculate_abc_rating(daily)
 
-        rs_sts = None
+        rs_sts   = None
         rrs_data = None
-        end_date = datetime.now()
+        end_date   = datetime.now()
         start_date = end_date - timedelta(days=120)
         try:
             stock_history = stock.history(start=start_date, end=end_date)
-            spy_history = yf.Ticker("SPY").history(start=start_date, end=end_date)
+            spy_history   = yf.Ticker("SPY").history(start=start_date, end=end_date)
             if stock_history is not None and spy_history is not None:
-                rrs_data = calculate_rrs(stock_history, spy_history, atr_length=14, length_rolling=50, length_sma=20, atr_multiplier=1.0)
+                rrs_data = calculate_rrs(stock_history, spy_history,
+                                         atr_length=14, length_rolling=50,
+                                         length_sma=20, atr_multiplier=1.0)
                 if rrs_data is not None and len(rrs_data) >= 21:
                     recent_21 = rrs_data['rollingRRS'].iloc[-21:]
-                    ranks = rankdata(recent_21, method='average')
-                    rs_sts = ((ranks[-1] - 1) / (len(recent_21) - 1)) * 100
+                    ranks     = rankdata(recent_21, method='average')
+                    rs_sts    = ((ranks[-1] - 1) / (len(recent_21) - 1)) * 100
         except Exception as e:
             print("RRS error", ticker_symbol, e)
 
-        rs_chart_path = create_rs_chart_png(rrs_data, ticker_symbol, charts_dir) if rrs_data is not None and len(rrs_data) > 0 else None
+        rs_chart_path = (
+            create_rs_chart_png(rrs_data, ticker_symbol, charts_dir)
+            if rrs_data is not None and len(rrs_data) > 0 else None
+        )
         long_etfs, short_etfs = get_leveraged_etfs(ticker_symbol)
 
         return {
-            "ticker": ticker_symbol,
-            "daily": round(daily_change, 2) if daily_change is not None else None,
-            "intra": round(intraday_change, 2) if intraday_change is not None else None,
-            "5d": round(five_day_change, 2) if five_day_change is not None else None,
-            "20d": round(twenty_day_change, 2) if twenty_day_change is not None else None,
-            "atr_pct": round(atr_pct, 1) if atr_pct is not None else None,
-            "dist_sma50_atr": round(dist_sma50_atr, 2) if dist_sma50_atr is not None else None,
-            "rs": round(rs_sts, 0) if rs_sts is not None else None,
-            "rs_chart": rs_chart_path,
-            "long": long_etfs,
-            "short": short_etfs,
-            "abc": abc_rating
+            "ticker":        ticker_symbol,
+            "daily":         round(daily_change,      2) if daily_change      is not None else None,
+            "intra":         round(intraday_change,   2) if intraday_change   is not None else None,
+            "5d":            round(five_day_change,   2) if five_day_change   is not None else None,
+            "20d":           round(twenty_day_change, 2) if twenty_day_change is not None else None,
+            "atr_pct":       round(atr_pct,           1) if atr_pct           is not None else None,
+            "dist_sma50_atr":round(dist_sma50_atr,    2) if dist_sma50_atr   is not None else None,
+            "rs":            round(rs_sts,             0) if rs_sts            is not None else None,
+            "rs_chart":      rs_chart_path,
+            "long":          long_etfs,
+            "short":         short_etfs,
+            "abc":           abc_rating
         }
     except Exception as e:
         print("Error", ticker_symbol, e)
@@ -291,17 +307,17 @@ def get_stock_data(ticker_symbol, charts_dir):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out-dir", default="data", help="Output directory (default: data)")
-    args = parser.parse_args()
-    out_dir = args.out_dir
-    charts_dir = os.path.join(out_dir, "charts")
+    args      = parser.parse_args()
+    out_dir   = args.out_dir
+    charts_dir= os.path.join(out_dir, "charts")
     os.makedirs(charts_dir, exist_ok=True)
 
     print("Fetching economic events...")
     events = get_upcoming_key_events()
 
-    print("Fetching stock data (no Liquid Stocks)...")
-    groups_data = {}
-    all_ticker_data = {}
+    print("Fetching stock data...")
+    groups_data    = {}
+    all_ticker_data= {}
     for group_name, tickers in STOCK_GROUPS.items():
         rows = []
         for i, ticker in enumerate(tickers):
@@ -316,33 +332,36 @@ def main():
     print("Computing column ranges...")
     column_ranges = {}
     for group_name, rows in groups_data.items():
-        daily_v = [r["daily"] for r in rows if r.get("daily") is not None]
-        intra_v = [r["intra"] for r in rows if r.get("intra") is not None]
-        five_v = [r["5d"] for r in rows if r.get("5d") is not None]
-        twenty_v = [r["20d"] for r in rows if r.get("20d") is not None]
+        daily_v  = [r["daily"] for r in rows if r.get("daily")  is not None]
+        intra_v  = [r["intra"] for r in rows if r.get("intra")  is not None]
+        five_v   = [r["5d"]    for r in rows if r.get("5d")     is not None]
+        twenty_v = [r["20d"]   for r in rows if r.get("20d")    is not None]
         column_ranges[group_name] = {
-            "daily": (min(daily_v) if daily_v else -10, max(daily_v) if daily_v else 10),
-            "intra": (min(intra_v) if intra_v else -10, max(intra_v) if intra_v else 10),
-            "5d": (min(five_v) if five_v else -20, max(five_v) if five_v else 20),
-            "20d": (min(twenty_v) if twenty_v else -30, max(twenty_v) if twenty_v else 30),
+            "daily": (min(daily_v)  if daily_v  else -10, max(daily_v)  if daily_v  else 10),
+            "intra": (min(intra_v)  if intra_v  else -10, max(intra_v)  if intra_v  else 10),
+            "5d":    (min(five_v)   if five_v   else -20, max(five_v)   if five_v   else 20),
+            "20d":   (min(twenty_v) if twenty_v else -30, max(twenty_v) if twenty_v else 30),
         }
 
     snapshot = {
-        "built_at": datetime.utcnow().isoformat() + "Z",
-        "groups": groups_data,
-        "column_ranges": column_ranges,
+        "built_at":     datetime.utcnow().isoformat() + "Z",
+        "groups":       groups_data,
+        "column_ranges":column_ranges,
     }
+
+    # FIX 4: Key-Name korrigiert ("Indices" statt falschem Namen)
+    first_group = list(STOCK_GROUPS.keys())[0]
     meta = {
-        "SECTOR_COLORS": SECTOR_COLORS,
+        "SECTOR_COLORS":    SECTOR_COLORS,
         "TICKER_TO_SECTOR": TICKER_TO_SECTOR,
-        "Industries_COLORS": Industries_COLORS,
-        "SECTOR_ORDER": list(SECTOR_COLORS.keys()),
-        "default_symbol": STOCK_GROUPS["Indices"][0] if STOCK_GROUPS["Indices"] else "SPY",
+        "Industries_COLORS":Industries_COLORS,
+        "SECTOR_ORDER":     list(SECTOR_COLORS.keys()),
+        "default_symbol":   STOCK_GROUPS[first_group][0] if STOCK_GROUPS[first_group] else "SPY",
     }
 
     snapshot_path = os.path.join(out_dir, "snapshot.json")
-    events_path = os.path.join(out_dir, "events.json")
-    meta_path = os.path.join(out_dir, "meta.json")
+    events_path   = os.path.join(out_dir, "events.json")
+    meta_path     = os.path.join(out_dir, "meta.json")
 
     with open(snapshot_path, "w", encoding="utf-8") as f:
         json.dump(snapshot, f, ensure_ascii=False, indent=2)
