@@ -1,3 +1,4 @@
+
 """
 Build dashboard data for static GitHub Pages deployment.
 Run from repo root: python scripts/build_data.py [--out-dir data]
@@ -38,8 +39,13 @@ KEY_EVENTS = [
 ]
 
 STOCK_GROUPS = {
-    "Indices": ["QQQE", "QQQ", "IBIT", "RSP", "TLT", "SPY"],
-  
+    "Indices": ["QQQE", "MGK", "QQQ", "IBIT", "RSP", "MDY", "IWM", "TLT", "SPY", "ETHA", "DIA"],
+
+    "Industries": [
+        "TAN", "KCE", "IBUY", "QQQE", "JETS", "IBB", "SMH", "CIBR", "UTES", "ROBO", "IGV", "WCLD", "ITA", "PAVE", "BLOK", "AIQ", "IYZ", "PEJ", "FDN", "KBE",
+        "UNG", "BOAT", "KWEB", "KRE", "IBIT", "XRT", "IHI", "DRIV", "MSOS", "SOCL", "XLU", "ARKF", "SLX", "ARKK", "XTN", "XME", "KIE", "GLD", "GXC", "SCHH",
+        "GDX", "IPAY", "IWM", "XOP", "VNQ", "EATZ", "FXI", "DBA", "ICLN", "SILJ", "REZ", "LIT", "SLV", "XHB", "XHE", "PBJ", "USO", "DBC", "FCG", "XBI",
+        "ARKG", "CPER", "XES", "OIH", "PPH", "FNGS", "URA", "WGMI", "REMX"
     ],
     "Countries": [
         "EZA", "ARGT", "EWA", "THD", "EIDO", "EWC", "GREK", "EWP", "EWG", "EWL", "EUFN", "EWY", "IEUR", "EFA", "ACWI",
@@ -49,11 +55,56 @@ STOCK_GROUPS = {
 
 LEVERAGED_ETFS = {
     "QQQ": {"long": ["TQQQ"], "short": ["SQQQ"]},
+    "MDY": {"long": ["MIDU"], "short": []},
+    "IWM": {"long": ["TNA"], "short": ["TZA"]},
     "TLT": {"long": ["TMF"], "short": ["TMV"]},
     "SPY": {"long": ["SPXL", "UPRO"], "short": ["SPXS", "SH"]},
+    "ETHA": {"long": ["ETHU"], "short": []},
+    "XLK": {"long": ["TECL"], "short": ["TECS"]},
+    "XLI": {"long": ["DUSL"], "short": []},
+    "XLC": {"long": ["LTL"], "short": []},
+    "XLF": {"long": ["FAS"], "short": ["FAZ"]},
+    "XLU": {"long": ["UTSL"], "short": []},
+    "XLY": {"long": ["WANT"], "short": ["SCC"]},
+    "XLRE": {"long": ["DRN"], "short": ["DRV"]},
+    "XLP": {"long": ["UGE"], "short": ["SZK"]},
+    "XLB": {"long": ["UYM"], "short": ["SMN"]},
+    "XLE": {"long": ["ERX"], "short": ["ERY"]},
+    "XLV": {"long": ["CURE"], "short": []},
+    "SMH": {"long": ["SOXL"], "short": ["SOXS"]},
+    "ARKK": {"long": ["TARK"], "short": ["SARK"]},
+    "XTN": {"long": ["TPOR"], "short": []},
+    "KWEB": {"long": ["CWEB"], "short": []},
+    "XRT": {"long": ["RETL"], "short": []},
+    "KRE": {"long": ["DPST"], "short": []},
+    "DRIV": {"long": ["EVAV"], "short": []},
+    "XBI": {"long": ["LABU"], "short": ["LABD"]},
+    "ROBO": {"long": ["UBOT"], "short": []},
+    "XHB": {"long": ["NAIL"], "short": []},
+    "FNGS": {"long": ["FNGB"], "short": ["FNGD"]},
+    "WCLD": {"long": ["CLDL"], "short": []},
+    "XOP": {"long": ["GUSH"], "short": ["DRIP"]},
+    "FDN": {"long": ["WEBL"], "short": ["WEBS"]},
+    "FXI": {"long": ["YINN"], "short": ["YANG"]},
+    "PEJ": {"long": ["OOTO"], "short": []},
+    "USO": {"long": ["UCO"], "short": ["SCO"]},
+    "PPH": {"long": ["PILL"], "short": []},
+    "ITA": {"long": ["DFEN"], "short": []},
     "SLV": {"long": ["AGQ"], "short": ["ZSL"]},
     "GLD": {"long": ["UGL"], "short": ["GLL"]},
-
+    "UNG": {"long": ["BOIL"], "short": ["KOLD"]},
+    "GDX": {"long": ["NUGT", "GDXU"], "short": ["JDST", "GDXD"]},
+    "IBIT": {"long": ["BITX", "BITU"], "short": ["SBIT", "BITI"]},
+    "MSOS": {"long": ["MSOX"], "short": []},
+    "REMX": {"long": [], "short": []},
+    "EWY": {"long": ["KORU"], "short": []},
+    "IEV": {"long": ["EURL"], "short": []},
+    "EWJ": {"long": ["EZJ"], "short": []},
+    "EWW": {"long": ["MEXX"], "short": []},
+    "ASHR": {"long": ["CHAU"], "short": []},
+    "INDA": {"long": ["INDL"], "short": []},
+    "EEM": {"long": ["EDC"], "short": ["EDZ"]},
+    "EWZ": {"long": ["BRZU"], "short": []}
 }
 
 SECTOR_COLORS = {
