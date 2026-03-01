@@ -1,5 +1,5 @@
 {
-  "built_at": "2026-03-01T14:32:22.584448Z",
+  "built_at": "2026-03-01T15:02:17.288186Z",
   "groups": {
     "Indices": [
       {
@@ -103,34 +103,6 @@
           "ZSL"
         ],
         "abc": "A"
-      },
-      {
-        "ticker": "ACWI",
-        "daily": -0.39,
-        "intra": 0.25,
-        "5d": -0.17,
-        "20d": 0.46,
-        "atr_pct": 1.1,
-        "dist_sma50_atr": 1.69,
-        "rs": 50.0,
-        "rs_chart": "data/charts/ACWI.png",
-        "long": [],
-        "short": [],
-        "abc": "A"
-      },
-      {
-        "ticker": "SPYI",
-        "daily": -0.38,
-        "intra": 0.4,
-        "5d": -0.27,
-        "20d": -0.39,
-        "atr_pct": 1.0,
-        "dist_sma50_atr": 0.39,
-        "rs": 25.0,
-        "rs_chart": "data/charts/SPYI.png",
-        "long": [],
-        "short": [],
-        "abc": "A"
       }
     ]
   },
@@ -141,7 +113,7 @@
         5.64
       ],
       "intra": [
-        0.25,
+        0.42,
         2.09
       ],
       "5d": [
