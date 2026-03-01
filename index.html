@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Chart Viewer</title>
+    <title>Market Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
     <style>
         * { box-sizing: border-box; }
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; height: 100vh; background-color: #1a1a1a; color: #e0e0e0; }
@@ -149,7 +150,7 @@
                     <dt>ATRx</dt>
                     <dd>Distance from SMA50 in ATR units.</dd>
                     <dt>1M-VARS</dt>
-                    <dd>Volatility Adjusted Relative Strength Stands vs SPY over last 21 days (0–100%).</dd>
+                    <dd>Volatility Adjusted Relative Strength vs SPY over last 21 days (0–100%).</dd>
                 </dl>
             </div>
         </div>
@@ -199,8 +200,7 @@
         var el = document.getElementById('timestamp-display');
         if (!el) return;
 
-        // Priorität 1: built_at_label direkt aus snapshot.json
-        // Erzeugt von build_data.py z.B. "01.03.2025 17:30 CET"
+        // Priorität 1: built_at_label direkt aus snapshot.json (z.B. "01.03.2025 17:30 CET")
         if (snap && snap.built_at_label) {
             el.textContent = snap.built_at_label;
             return;
@@ -217,7 +217,7 @@
                     year:         'numeric',
                     hour:         '2-digit',
                     minute:       '2-digit',
-                    timeZoneName: 'short'   // zeigt "MEZ" oder "MESZ"
+                    timeZoneName: 'short'
                 });
             } catch (e) {
                 el.textContent = snap.built_at;
@@ -321,7 +321,6 @@
         }
         document.getElementById('groups-container').innerHTML = html;
 
-        // Inject dynamic styles for Industries ticker colors
         if (meta && meta.Industries_COLORS) {
             var style = document.createElement('style');
             var css = '';
@@ -407,7 +406,6 @@
         function sectorIndex(s) { var i = sectorOrder.indexOf(s); return i >= 0 ? i : sectorOrder.length; }
 
         rows.sort(function(a, b) {
-            var aVal, bVal;
             if (sortBy === 'symbol') {
                 if (group === 'Industries') {
                     var aT = a.getAttribute('data-symbol'), bT = b.getAttribute('data-symbol');
@@ -456,7 +454,7 @@
                 if (group && sortBy) window.sortGroup(group, sortBy);
             });
         }
-        var defaultSymbol = (meta && meta.default_symbol) ? meta.default_symbol : 'QQQE';
+        var defaultSymbol = (meta && meta.default_symbol) ? meta.default_symbol : 'ACWI';
         initChart(defaultSymbol);
         if (allTickerRows.length > 0) {
             allTickerRows[0].classList.add('active');
@@ -476,10 +474,7 @@
             snapshot = results[0];
             var events = results[1];
             meta = results[2];
-
-            // ── Zeitstempel setzen ──
             renderTimestamp(snapshot);
-
             renderEvents(events);
             renderGroups();
         }).catch(function() {
