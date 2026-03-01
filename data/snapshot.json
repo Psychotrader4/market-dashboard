@@ -1,7 +1,22 @@
 {
-  "built_at": "2026-03-01T15:05:07.480092Z",
+  "built_at": "2026-03-01T16:32:30+01:00",
+  "built_at_label": "01.03.2026 16:32 CET",
   "groups": {
     "Indices": [
+      {
+        "ticker": "ACWI",
+        "daily": -0.39,
+        "intra": 0.25,
+        "5d": -0.17,
+        "20d": 0.46,
+        "atr_pct": 1.1,
+        "dist_sma50_atr": 1.68,
+        "rs": 50.0,
+        "rs_chart": "data/charts/ACWI.png",
+        "long": [],
+        "short": [],
+        "abc": "A"
+      },
       {
         "ticker": "SPY",
         "daily": -0.48,
@@ -29,7 +44,7 @@
         "5d": 0.43,
         "20d": 3.25,
         "atr_pct": 1.1,
-        "dist_sma50_atr": 3.05,
+        "dist_sma50_atr": 3.04,
         "rs": 50.0,
         "rs_chart": "data/charts/RSP.png",
         "long": [],
@@ -69,21 +84,17 @@
         "abc": "B"
       },
       {
-        "ticker": "GLD",
+        "ticker": "IAU",
         "daily": 1.31,
         "intra": 0.62,
-        "5d": 3.23,
-        "20d": -2.45,
-        "atr_pct": 2.9,
-        "dist_sma50_atr": 3.48,
-        "rs": 35.0,
-        "rs_chart": "data/charts/GLD.png",
-        "long": [
-          "UGL"
-        ],
-        "short": [
-          "GLL"
-        ],
+        "5d": 3.25,
+        "20d": -2.46,
+        "atr_pct": 2.5,
+        "dist_sma50_atr": 4.03,
+        "rs": 40.0,
+        "rs_chart": "data/charts/IAU.png",
+        "long": [],
+        "short": [],
         "abc": "A"
       },
       {
@@ -113,7 +124,7 @@
         5.64
       ],
       "intra": [
-        0.42,
+        0.25,
         2.09
       ],
       "5d": [
