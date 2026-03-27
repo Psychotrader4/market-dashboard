@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-03-27T22:53:00+01:00",
-  "built_at_label": "27.03.2026 22:53 CET",
+  "built_at": "2026-03-27T23:01:14+01:00",
+  "built_at_label": "27.03.2026 23:01 CET",
   "groups": {
     "Indices": [
       {
@@ -41,10 +41,10 @@
         "ticker": "RSP",
         "daily": -1.37,
         "intra": -1.03,
-        "5d": -0.64,
-        "20d": -7.66,
+        "5d": -1.06,
+        "20d": -8.05,
         "atr_pct": 1.5,
-        "dist_sma50_atr": -3.16,
+        "dist_sma50_atr": -3.45,
         "rs": 0.0,
         "rs_chart": "data/charts/RSP.png",
         "long": [],
@@ -55,10 +55,10 @@
         "ticker": "QQQ",
         "daily": -1.95,
         "intra": -1.44,
-        "5d": -3.22,
-        "20d": -7.25,
+        "5d": -3.35,
+        "20d": -7.36,
         "atr_pct": 1.9,
-        "dist_sma50_atr": -3.83,
+        "dist_sma50_atr": -3.89,
         "rs": 90.0,
         "rs_chart": "data/charts/QQQ.png",
         "long": [
@@ -73,10 +73,10 @@
         "ticker": "QQQE",
         "daily": -2.02,
         "intra": -1.51,
-        "5d": -2.47,
-        "20d": -7.23,
+        "5d": -2.63,
+        "20d": -7.39,
         "atr_pct": 1.7,
-        "dist_sma50_atr": -3.41,
+        "dist_sma50_atr": -3.47,
         "rs": 85.0,
         "rs_chart": "data/charts/QQQE.png",
         "long": [],
@@ -156,7 +156,7 @@
         12.75
       ],
       "5d": [
-        -3.22,
+        -3.35,
         15.94
       ],
       "20d": [
