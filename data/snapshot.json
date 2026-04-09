@@ -1,12 +1,12 @@
 {
-  "built_at": "2026-04-09T22:57:10+02:00",
-  "built_at_label": "09.04.2026 22:57 CEST",
+  "built_at": "2026-04-09T23:52:17+02:00",
+  "built_at_label": "09.04.2026 23:52 CEST",
   "groups": {
     "Indices": [
       {
         "ticker": "ACWI",
         "daily": 0.31,
-        "intra": 0.62,
+        "intra": 0.68,
         "5d": 3.87,
         "20d": 1.49,
         "atr_pct": 1.7,
@@ -25,7 +25,7 @@
         "20d": 0.8,
         "atr_pct": 1.5,
         "dist_sma50_atr": 0.65,
-        "rs": 20.0,
+        "rs": 12.0,
         "rs_chart": "data/charts/SPY.png",
         "long": [
           "SPXL",
@@ -54,7 +54,7 @@
       {
         "ticker": "QQQ",
         "daily": 0.68,
-        "intra": 0.7,
+        "intra": 0.68,
         "5d": 4.43,
         "20d": 0.54,
         "atr_pct": 1.9,
