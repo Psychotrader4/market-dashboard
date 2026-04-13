@@ -1,12 +1,12 @@
 {
-  "built_at": "2026-04-13T23:00:02+02:00",
-  "built_at_label": "13.04.2026 23:00 CEST",
+  "built_at": "2026-04-13T23:55:37+02:00",
+  "built_at_label": "13.04.2026 23:55 CEST",
   "groups": {
     "Indices": [
       {
         "ticker": "ACWI",
         "daily": 0.94,
-        "intra": 1.44,
+        "intra": 1.33,
         "5d": 4.47,
         "20d": 4.92,
         "atr_pct": 1.6,
@@ -54,7 +54,7 @@
       {
         "ticker": "QQQ",
         "daily": 1.03,
-        "intra": 1.3,
+        "intra": 1.28,
         "5d": 4.91,
         "20d": 4.12,
         "atr_pct": 1.8,
