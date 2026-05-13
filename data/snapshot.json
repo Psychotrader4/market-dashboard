@@ -1,17 +1,17 @@
 {
-  "built_at": "2026-05-13T20:24:45+02:00",
-  "built_at_label": "13.05.2026 20:24 CEST",
+  "built_at": "2026-05-13T23:27:48+02:00",
+  "built_at_label": "13.05.2026 23:27 CEST",
   "groups": {
     "Indices": [
       {
         "ticker": "ACWI",
-        "daily": 0.9,
-        "intra": 0.72,
-        "5d": 0.42,
-        "20d": 4.87,
+        "daily": 0.8,
+        "intra": 0.61,
+        "5d": 0.31,
+        "20d": 4.76,
         "atr_pct": 1.2,
-        "dist_sma50_atr": 6.15,
-        "rs": 55.0,
+        "dist_sma50_atr": 6.05,
+        "rs": 60.0,
         "rs_chart": "data/charts/ACWI.png",
         "long": [],
         "short": [],
@@ -19,12 +19,12 @@
       },
       {
         "ticker": "SPY",
-        "daily": 0.74,
-        "intra": 0.7,
-        "5d": 1.34,
-        "20d": 6.25,
+        "daily": 0.56,
+        "intra": 0.52,
+        "5d": 1.16,
+        "20d": 6.05,
         "atr_pct": 1.0,
-        "dist_sma50_atr": 8.11,
+        "dist_sma50_atr": 7.9,
         "rs": 20.0,
         "rs_chart": "data/charts/SPY.png",
         "long": [
@@ -39,12 +39,12 @@
       },
       {
         "ticker": "RSP",
-        "daily": -0.4,
-        "intra": -0.34,
-        "5d": -0.91,
-        "20d": 1.63,
+        "daily": -0.44,
+        "intra": -0.37,
+        "5d": -0.94,
+        "20d": 1.6,
         "atr_pct": 1.0,
-        "dist_sma50_atr": 2.51,
+        "dist_sma50_atr": 2.47,
         "rs": 0.0,
         "rs_chart": "data/charts/RSP.png",
         "long": [],
@@ -53,12 +53,12 @@
       },
       {
         "ticker": "QQQ",
-        "daily": 1.28,
-        "intra": 0.91,
-        "5d": 2.95,
-        "20d": 12.38,
+        "daily": 1.06,
+        "intra": 0.69,
+        "5d": 2.72,
+        "20d": 12.13,
         "atr_pct": 1.5,
-        "dist_sma50_atr": 9.55,
+        "dist_sma50_atr": 9.37,
         "rs": 90.0,
         "rs_chart": "data/charts/QQQ.png",
         "long": [
@@ -71,12 +71,12 @@
       },
       {
         "ticker": "QQQE",
-        "daily": 0.3,
-        "intra": 0.1,
-        "5d": 0.66,
-        "20d": 8.43,
+        "daily": 0.18,
+        "intra": -0.03,
+        "5d": 0.53,
+        "20d": 8.29,
         "atr_pct": 1.2,
-        "dist_sma50_atr": 7.27,
+        "dist_sma50_atr": 7.12,
         "rs": 10.0,
         "rs_chart": "data/charts/QQQE.png",
         "long": [],
@@ -85,13 +85,13 @@
       },
       {
         "ticker": "IAU",
-        "daily": -0.55,
-        "intra": 0.01,
-        "5d": -0.09,
-        "20d": -2.24,
+        "daily": -0.59,
+        "intra": -0.03,
+        "5d": -0.12,
+        "20d": -2.27,
         "atr_pct": 1.9,
-        "dist_sma50_atr": -0.7,
-        "rs": 0.0,
+        "dist_sma50_atr": -0.72,
+        "rs": 5.0,
         "rs_chart": "data/charts/IAU.png",
         "long": [],
         "short": [],
@@ -99,12 +99,12 @@
       },
       {
         "ticker": "SLV",
-        "daily": 1.5,
-        "intra": 1.36,
-        "5d": 13.69,
-        "20d": 10.98,
-        "atr_pct": 3.7,
-        "dist_sma50_atr": 3.79,
+        "daily": 1.02,
+        "intra": 0.88,
+        "5d": 13.15,
+        "20d": 10.45,
+        "atr_pct": 3.8,
+        "dist_sma50_atr": 3.63,
         "rs": 35.0,
         "rs_chart": "data/charts/SLV.png",
         "long": [
@@ -117,12 +117,12 @@
       },
       {
         "ticker": "^VIX",
-        "daily": -1.0,
-        "intra": -0.95,
-        "5d": 2.42,
-        "20d": -1.98,
+        "daily": -0.67,
+        "intra": -0.61,
+        "5d": 2.76,
+        "20d": -1.65,
         "atr_pct": 9.6,
-        "dist_sma50_atr": -1.93,
+        "dist_sma50_atr": -1.9,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -131,12 +131,12 @@
       },
       {
         "ticker": "^VVIX",
-        "daily": -0.54,
-        "intra": -0.9,
-        "5d": 4.61,
-        "20d": 0.38,
+        "daily": -0.19,
+        "intra": -0.56,
+        "5d": 4.97,
+        "20d": 0.73,
         "atr_pct": 5.0,
-        "dist_sma50_atr": -2.08,
+        "dist_sma50_atr": -2.01,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -148,20 +148,20 @@
   "column_ranges": {
     "Indices": {
       "daily": [
-        -1.0,
-        1.5
+        -0.67,
+        1.06
       ],
       "intra": [
-        -0.95,
-        1.36
+        -0.61,
+        0.88
       ],
       "5d": [
-        -0.91,
-        13.69
+        -0.94,
+        13.15
       ],
       "20d": [
-        -2.24,
-        12.38
+        -2.27,
+        12.13
       ]
     }
   }
