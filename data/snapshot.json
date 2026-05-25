@@ -1,17 +1,17 @@
 {
-  "built_at": "2026-05-23T00:13:59+02:00",
-  "built_at_label": "23.05.2026 00:13 CEST",
+  "built_at": "2026-05-25T19:18:25+02:00",
+  "built_at_label": "25.05.2026 19:18 CEST",
   "groups": {
     "Indices": [
       {
         "ticker": "ACWI",
         "daily": 0.19,
-        "intra": -0.19,
+        "intra": -0.25,
         "5d": 1.24,
         "20d": 3.65,
         "atr_pct": 1.2,
         "dist_sma50_atr": 5.14,
-        "rs": 35.0,
+        "rs": 40.0,
         "rs_chart": "data/charts/ACWI.png",
         "long": [],
         "short": [],
@@ -25,7 +25,7 @@
         "20d": 4.44,
         "atr_pct": 1.0,
         "dist_sma50_atr": 6.91,
-        "rs": 25.0,
+        "rs": 65.0,
         "rs_chart": "data/charts/SPY.png",
         "long": [
           "SPXL",
@@ -117,12 +117,12 @@
       },
       {
         "ticker": "^VIX",
-        "daily": -0.36,
-        "intra": -0.77,
-        "5d": -9.39,
-        "20d": -10.74,
-        "atr_pct": 9.0,
-        "dist_sma50_atr": -2.18,
+        "daily": -0.66,
+        "intra": -1.31,
+        "5d": -6.9,
+        "20d": -7.94,
+        "atr_pct": 8.6,
+        "dist_sma50_atr": -2.25,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -152,15 +152,15 @@
         0.98
       ],
       "intra": [
-        -1.14,
+        -1.31,
         0.65
       ],
       "5d": [
-        -9.39,
+        -6.9,
         3.51
       ],
       "20d": [
-        -10.74,
+        -7.94,
         8.08
       ]
     }
