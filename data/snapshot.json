@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-07-02T23:13:07+02:00",
-  "built_at_label": "02.07.2026 23:13 CEST",
+  "built_at": "2026-07-03T00:14:10+02:00",
+  "built_at_label": "03.07.2026 00:14 CEST",
   "groups": {
     "Indices": [
       {
@@ -25,7 +25,7 @@
         "20d": -1.0,
         "atr_pct": 1.4,
         "dist_sma50_atr": 0.88,
-        "rs": 35.0,
+        "rs": 88.0,
         "rs_chart": "data/charts/SPY.png",
         "long": [
           "SPXL",
