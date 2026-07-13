@@ -1,12 +1,12 @@
 {
-  "built_at": "2026-07-13T23:00:10+02:00",
-  "built_at_label": "13.07.2026 23:00 CEST",
+  "built_at": "2026-07-14T00:02:01+02:00",
+  "built_at_label": "14.07.2026 00:02 CEST",
   "groups": {
     "Indices": [
       {
         "ticker": "ACWI",
         "daily": -1.1,
-        "intra": -0.57,
+        "intra": -0.51,
         "5d": -1.29,
         "20d": 0.72,
         "atr_pct": 1.3,
