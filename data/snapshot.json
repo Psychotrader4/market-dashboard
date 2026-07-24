@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-07-24T23:07:32+02:00",
-  "built_at_label": "24.07.2026 23:07 CEST",
+  "built_at": "2026-07-25T00:11:59+02:00",
+  "built_at_label": "25.07.2026 00:11 CEST",
   "groups": {
     "Indices": [
       {
@@ -54,7 +54,7 @@
       {
         "ticker": "QQQ",
         "daily": -1.12,
-        "intra": -0.9,
+        "intra": -0.87,
         "5d": -1.6,
         "20d": -4.49,
         "atr_pct": 2.1,
