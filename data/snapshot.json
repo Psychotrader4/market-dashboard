@@ -1,12 +1,12 @@
 {
-  "built_at": "2026-08-17T22:30:47+02:00",
-  "built_at_label": "17.08.2026 22:30 CEST",
+  "built_at": "2026-08-17T23:31:54+02:00",
+  "built_at_label": "17.08.2026 23:31 CEST",
   "groups": {
     "Indices": [
       {
         "ticker": "ACWI",
         "daily": -0.28,
-        "intra": -0.46,
+        "intra": -0.33,
         "5d": 0.45,
         "20d": 4.76,
         "atr_pct": 1.0,
@@ -73,11 +73,11 @@
         "ticker": "QQQE",
         "daily": -0.55,
         "intra": -0.6,
-        "5d": 1.63,
-        "20d": 6.12,
+        "5d": 1.47,
+        "20d": 6.21,
         "atr_pct": 1.2,
         "dist_sma50_atr": 3.2,
-        "rs": 5.0,
+        "rs": 15.0,
         "rs_chart": "data/charts/QQQE.png",
         "long": [],
         "short": [],
