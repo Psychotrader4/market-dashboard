@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-08-20T22:32:21+02:00",
-  "built_at_label": "20.08.2026 22:32 CEST",
+  "built_at": "2026-08-20T23:34:09+02:00",
+  "built_at_label": "20.08.2026 23:34 CEST",
   "groups": {
     "Indices": [
       {
@@ -8,10 +8,10 @@
         "daily": -0.45,
         "intra": -0.14,
         "5d": -1.54,
-        "20d": 3.55,
+        "20d": 3.65,
         "atr_pct": 1.0,
-        "dist_sma50_atr": 1.86,
-        "rs": 95.0,
+        "dist_sma50_atr": 1.78,
+        "rs": 75.0,
         "rs_chart": "data/charts/ACWI.png",
         "long": [],
         "short": [],
@@ -42,9 +42,9 @@
         "daily": -0.81,
         "intra": -0.21,
         "5d": -1.1,
-        "20d": 3.53,
+        "20d": 3.94,
         "atr_pct": 0.9,
-        "dist_sma50_atr": 2.89,
+        "dist_sma50_atr": 2.76,
         "rs": 5.0,
         "rs_chart": "data/charts/RSP.png",
         "long": [],
@@ -54,7 +54,7 @@
       {
         "ticker": "QQQ",
         "daily": -0.72,
-        "intra": -0.16,
+        "intra": -0.19,
         "5d": -2.89,
         "20d": 2.74,
         "atr_pct": 1.6,
@@ -74,10 +74,10 @@
         "daily": -0.59,
         "intra": -0.17,
         "5d": -1.98,
-        "20d": 4.73,
+        "20d": 4.19,
         "atr_pct": 1.2,
-        "dist_sma50_atr": 1.81,
-        "rs": 10.0,
+        "dist_sma50_atr": 1.82,
+        "rs": 20.0,
         "rs_chart": "data/charts/QQQE.png",
         "long": [],
         "short": [],
@@ -120,9 +120,9 @@
         "daily": 7.52,
         "intra": 7.38,
         "5d": 9.43,
-        "20d": -14.16,
-        "atr_pct": 8.8,
-        "dist_sma50_atr": -0.73,
+        "20d": -14.39,
+        "atr_pct": 9.0,
+        "dist_sma50_atr": -0.59,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -134,9 +134,9 @@
         "daily": 3.85,
         "intra": 0.14,
         "5d": 0.49,
-        "20d": -12.6,
-        "atr_pct": 6.0,
-        "dist_sma50_atr": -0.63,
+        "20d": -5.95,
+        "atr_pct": 6.2,
+        "dist_sma50_atr": -0.61,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -160,7 +160,7 @@
         9.43
       ],
       "20d": [
-        -14.16,
+        -14.39,
         18.44
       ]
     }
