@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-09-03T00:27:48+02:00",
-  "built_at_label": "03.09.2026 00:27 CEST",
+  "built_at": "2026-09-03T01:13:51+02:00",
+  "built_at_label": "03.09.2026 01:13 CEST",
   "groups": {
     "Indices": [
       {
@@ -41,10 +41,10 @@
         "ticker": "RSP",
         "daily": 0.46,
         "intra": 0.4,
-        "5d": -1.43,
-        "20d": -0.74,
+        "5d": -1.58,
+        "20d": -0.51,
         "atr_pct": 0.8,
-        "dist_sma50_atr": 1.13,
+        "dist_sma50_atr": 1.02,
         "rs": 0.0,
         "rs_chart": "data/charts/RSP.png",
         "long": [],
@@ -91,7 +91,7 @@
         "20d": 7.64,
         "atr_pct": 2.0,
         "dist_sma50_atr": 2.08,
-        "rs": 70.0,
+        "rs": 60.0,
         "rs_chart": "data/charts/IAU.png",
         "long": [],
         "short": [],
