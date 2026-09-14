@@ -1,12 +1,12 @@
 {
-  "built_at": "2026-09-14T22:26:06+02:00",
-  "built_at_label": "14.09.2026 22:26 CEST",
+  "built_at": "2026-09-15T01:00:51+02:00",
+  "built_at_label": "15.09.2026 01:00 CEST",
   "groups": {
     "Indices": [
       {
         "ticker": "ACWI",
         "daily": -0.8,
-        "intra": 0.14,
+        "intra": 0.1,
         "5d": -1.81,
         "20d": -2.05,
         "atr_pct": 0.9,
@@ -54,7 +54,7 @@
       {
         "ticker": "QQQ",
         "daily": -0.8,
-        "intra": 0.83,
+        "intra": 0.84,
         "5d": -1.36,
         "20d": -2.99,
         "atr_pct": 1.3,
@@ -117,12 +117,12 @@
       },
       {
         "ticker": "^VIX",
-        "daily": 8.02,
-        "intra": -2.23,
-        "5d": 11.83,
-        "20d": 12.64,
+        "daily": 7.95,
+        "intra": -2.29,
+        "5d": 11.76,
+        "20d": 12.57,
         "atr_pct": 8.0,
-        "dist_sma50_atr": 0.74,
+        "dist_sma50_atr": 0.73,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -131,12 +131,12 @@
       },
       {
         "ticker": "^VVIX",
-        "daily": 3.9,
-        "intra": -4.3,
-        "5d": 12.34,
-        "20d": 8.41,
+        "daily": 3.95,
+        "intra": -4.25,
+        "5d": 12.4,
+        "20d": 8.47,
         "atr_pct": 5.9,
-        "dist_sma50_atr": 0.51,
+        "dist_sma50_atr": 0.52,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -149,19 +149,19 @@
     "Indices": {
       "daily": [
         -2.2,
-        8.02
+        7.95
       ],
       "intra": [
-        -4.3,
-        0.83
+        -4.25,
+        0.84
       ],
       "5d": [
         -4.98,
-        12.34
+        12.4
       ],
       "20d": [
         -5.31,
-        12.64
+        12.57
       ]
     }
   }
