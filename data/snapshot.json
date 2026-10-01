@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-10-01T22:23:58+02:00",
-  "built_at_label": "01.10.2026 22:23 CEST",
+  "built_at": "2026-10-01T23:12:48+02:00",
+  "built_at_label": "01.10.2026 23:12 CEST",
   "groups": {
     "Indices": [
       {
@@ -25,7 +25,7 @@
         "20d": 0.1,
         "atr_pct": 0.9,
         "dist_sma50_atr": 0.37,
-        "rs": 92.0,
+        "rs": 78.0,
         "rs_chart": "data/charts/SPY.png",
         "long": [
           "SPXL",
@@ -117,12 +117,12 @@
       },
       {
         "ticker": "^VIX",
-        "daily": 0.55,
-        "intra": 0.61,
-        "5d": 4.85,
-        "20d": 14.73,
+        "daily": 0.31,
+        "intra": 0.37,
+        "5d": 4.59,
+        "20d": 14.46,
         "atr_pct": 8.0,
-        "dist_sma50_atr": 0.46,
+        "dist_sma50_atr": 0.43,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -131,10 +131,10 @@
       },
       {
         "ticker": "^VVIX",
-        "daily": 2.82,
-        "intra": 1.51,
-        "5d": 1.58,
-        "20d": 6.67,
+        "daily": 2.83,
+        "intra": 1.52,
+        "5d": 1.59,
+        "20d": 6.68,
         "atr_pct": 5.3,
         "dist_sma50_atr": 0.23,
         "rs": null,
@@ -149,19 +149,19 @@
     "Indices": {
       "daily": [
         -0.02,
-        2.82
+        2.83
       ],
       "intra": [
         -0.16,
-        1.51
+        1.52
       ],
       "5d": [
         -4.51,
-        4.85
+        4.59
       ],
       "20d": [
         -6.86,
-        14.73
+        14.46
       ]
     }
   }
