@@ -1,12 +1,12 @@
 {
-  "built_at": "2026-10-02T22:52:57+02:00",
-  "built_at_label": "02.10.2026 22:52 CEST",
+  "built_at": "2026-10-03T01:37:54+02:00",
+  "built_at_label": "03.10.2026 01:37 CEST",
   "groups": {
     "Indices": [
       {
         "ticker": "ACWI",
         "daily": 0.85,
-        "intra": -0.03,
+        "intra": 0.04,
         "5d": -0.6,
         "20d": -1.14,
         "atr_pct": 0.9,
@@ -25,7 +25,7 @@
         "20d": -0.21,
         "atr_pct": 0.9,
         "dist_sma50_atr": 1.11,
-        "rs": 10.0,
+        "rs": 38.0,
         "rs_chart": "data/charts/SPY.png",
         "long": [
           "SPXL",
@@ -153,7 +153,7 @@
       ],
       "intra": [
         -5.2,
-        -0.03
+        0.04
       ],
       "5d": [
         -5.85,
