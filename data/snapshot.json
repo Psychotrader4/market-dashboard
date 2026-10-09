@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-10-09T02:12:38+02:00",
-  "built_at_label": "09.10.2026 02:12 CEST",
+  "built_at": "2026-10-09T03:08:17+02:00",
+  "built_at_label": "09.10.2026 03:08 CEST",
   "groups": {
     "Indices": [
       {
@@ -121,8 +121,8 @@
         "intra": -1.72,
         "5d": -5.98,
         "20d": -13.62,
-        "atr_pct": 8.0,
-        "dist_sma50_atr": -0.11,
+        "atr_pct": 7.9,
+        "dist_sma50_atr": -0.08,
         "rs": null,
         "rs_chart": null,
         "long": [],
