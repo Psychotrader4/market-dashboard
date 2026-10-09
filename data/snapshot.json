@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-10-09T22:10:00+02:00",
-  "built_at_label": "09.10.2026 22:10 CEST",
+  "built_at": "2026-10-09T23:08:35+02:00",
+  "built_at_label": "09.10.2026 23:08 CEST",
   "groups": {
     "Indices": [
       {
@@ -39,12 +39,12 @@
       },
       {
         "ticker": "RSP",
-        "daily": 0.56,
-        "intra": 0.27,
-        "5d": 1.59,
-        "20d": -0.47,
+        "daily": 0.55,
+        "intra": 0.26,
+        "5d": 1.58,
+        "20d": -0.48,
         "atr_pct": 0.9,
-        "dist_sma50_atr": -1.39,
+        "dist_sma50_atr": -1.4,
         "rs": 15.0,
         "rs_chart": "data/charts/RSP.png",
         "long": [],
@@ -99,12 +99,12 @@
       },
       {
         "ticker": "SLV",
-        "daily": 2.5,
-        "intra": -0.19,
-        "5d": 0.09,
-        "20d": -5.73,
+        "daily": 2.49,
+        "intra": -0.21,
+        "5d": 0.07,
+        "20d": -5.75,
         "atr_pct": 2.9,
-        "dist_sma50_atr": -1.88,
+        "dist_sma50_atr": -1.89,
         "rs": 5.0,
         "rs_chart": "data/charts/SLV.png",
         "long": [
@@ -117,10 +117,10 @@
       },
       {
         "ticker": "^VIX",
-        "daily": -3.76,
-        "intra": -3.32,
-        "5d": -3.14,
-        "20d": -6.38,
+        "daily": -3.7,
+        "intra": -3.26,
+        "5d": -3.07,
+        "20d": -6.31,
         "atr_pct": 8.0,
         "dist_sma50_atr": -0.53,
         "rs": null,
@@ -131,12 +131,12 @@
       },
       {
         "ticker": "^VVIX",
-        "daily": -2.52,
-        "intra": -1.11,
-        "5d": -1.8,
-        "20d": -6.39,
+        "daily": -3.17,
+        "intra": -1.77,
+        "5d": -2.46,
+        "20d": -7.01,
         "atr_pct": 5.8,
-        "dist_sma50_atr": -0.7,
+        "dist_sma50_atr": -0.79,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -148,19 +148,19 @@
   "column_ranges": {
     "Indices": {
       "daily": [
-        -3.76,
-        2.5
+        -3.7,
+        2.49
       ],
       "intra": [
-        -3.32,
+        -3.26,
         0.3
       ],
       "5d": [
-        -3.14,
-        1.59
+        -3.07,
+        1.58
       ],
       "20d": [
-        -6.39,
+        -7.01,
         5.2
       ]
     }
