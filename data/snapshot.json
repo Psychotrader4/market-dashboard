@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-10-13T01:09:13+02:00",
-  "built_at_label": "13.10.2026 01:09 CEST",
+  "built_at": "2026-10-13T03:54:13+02:00",
+  "built_at_label": "13.10.2026 03:54 CEST",
   "groups": {
     "Indices": [
       {
@@ -44,7 +44,7 @@
         "5d": 0.98,
         "20d": -0.47,
         "atr_pct": 0.9,
-        "dist_sma50_atr": -1.37,
+        "dist_sma50_atr": -1.36,
         "rs": 30.0,
         "rs_chart": "data/charts/RSP.png",
         "long": [],
@@ -54,7 +54,7 @@
       {
         "ticker": "QQQ",
         "daily": -0.7,
-        "intra": -0.48,
+        "intra": -0.49,
         "5d": -1.34,
         "20d": 5.31,
         "atr_pct": 1.2,
@@ -72,7 +72,7 @@
       {
         "ticker": "QQQE",
         "daily": -0.81,
-        "intra": -0.83,
+        "intra": -0.8,
         "5d": -1.11,
         "20d": 2.62,
         "atr_pct": 1.0,
