@@ -1,16 +1,16 @@
 {
-  "built_at": "2026-11-06T21:57:43+01:00",
-  "built_at_label": "06.11.2026 21:57 CET",
+  "built_at": "2026-11-06T22:43:01+01:00",
+  "built_at_label": "06.11.2026 22:43 CET",
   "groups": {
     "Indices": [
       {
         "ticker": "ACWI",
-        "daily": -0.06,
-        "intra": 0.08,
-        "5d": -2.37,
-        "20d": -5.32,
+        "daily": -0.04,
+        "intra": 0.11,
+        "5d": -2.35,
+        "20d": -5.3,
         "atr_pct": 1.4,
-        "dist_sma50_atr": -3.17,
+        "dist_sma50_atr": -3.15,
         "rs": 70.0,
         "rs_chart": "data/charts/ACWI.png",
         "long": [],
@@ -19,12 +19,12 @@
       },
       {
         "ticker": "SPY",
-        "daily": 0.3,
-        "intra": 0.05,
-        "5d": -2.72,
-        "20d": -5.57,
+        "daily": 0.31,
+        "intra": 0.06,
+        "5d": -2.7,
+        "20d": -5.56,
         "atr_pct": 1.4,
-        "dist_sma50_atr": -2.74,
+        "dist_sma50_atr": -2.73,
         "rs": 75.0,
         "rs_chart": "data/charts/SPY.png",
         "long": [
@@ -39,12 +39,12 @@
       },
       {
         "ticker": "RSP",
-        "daily": -0.45,
-        "intra": 0.3,
-        "5d": -1.11,
-        "20d": 1.34,
+        "daily": -0.38,
+        "intra": 0.37,
+        "5d": -1.04,
+        "20d": 1.41,
         "atr_pct": 1.2,
-        "dist_sma50_atr": 0.52,
+        "dist_sma50_atr": 0.58,
         "rs": 100.0,
         "rs_chart": "data/charts/RSP.png",
         "long": [],
@@ -53,12 +53,12 @@
       },
       {
         "ticker": "QQQ",
-        "daily": 1.37,
-        "intra": -0.37,
-        "5d": -5.0,
-        "20d": -12.69,
+        "daily": 1.4,
+        "intra": -0.34,
+        "5d": -4.98,
+        "20d": -12.67,
         "atr_pct": 2.4,
-        "dist_sma50_atr": -3.82,
+        "dist_sma50_atr": -3.81,
         "rs": 10.0,
         "rs_chart": "data/charts/QQQ.png",
         "long": [
@@ -71,13 +71,13 @@
       },
       {
         "ticker": "QQQE",
-        "daily": 0.36,
-        "intra": 0.04,
-        "5d": -3.76,
-        "20d": -8.2,
+        "daily": 0.44,
+        "intra": -0.02,
+        "5d": -3.68,
+        "20d": -8.13,
         "atr_pct": 1.7,
-        "dist_sma50_atr": -3.53,
-        "rs": 5.0,
+        "dist_sma50_atr": -3.49,
+        "rs": 15.0,
         "rs_chart": "data/charts/QQQE.png",
         "long": [],
         "short": [],
@@ -99,13 +99,13 @@
       },
       {
         "ticker": "SLV",
-        "daily": -0.21,
-        "intra": 0.99,
-        "5d": 5.0,
-        "20d": -14.51,
+        "daily": -0.13,
+        "intra": 1.08,
+        "5d": 5.09,
+        "20d": -14.44,
         "atr_pct": 3.3,
-        "dist_sma50_atr": -4.1,
-        "rs": 30.0,
+        "dist_sma50_atr": -4.08,
+        "rs": 35.0,
         "rs_chart": "data/charts/SLV.png",
         "long": [
           "AGQ"
@@ -117,12 +117,12 @@
       },
       {
         "ticker": "^VIX",
-        "daily": -12.38,
-        "intra": -10.8,
-        "5d": 27.14,
-        "20d": 66.37,
-        "atr_pct": 12.5,
-        "dist_sma50_atr": 3.68,
+        "daily": -9.01,
+        "intra": -7.37,
+        "5d": 32.03,
+        "20d": 72.78,
+        "atr_pct": 12.1,
+        "dist_sma50_atr": 4.27,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -131,12 +131,12 @@
       },
       {
         "ticker": "^VVIX",
-        "daily": -8.67,
-        "intra": -4.69,
-        "5d": 15.83,
-        "20d": 45.24,
-        "atr_pct": 10.4,
-        "dist_sma50_atr": 2.95,
+        "daily": -9.67,
+        "intra": -5.72,
+        "5d": 14.57,
+        "20d": 43.66,
+        "atr_pct": 10.5,
+        "dist_sma50_atr": 2.79,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -148,20 +148,20 @@
   "column_ranges": {
     "Indices": {
       "daily": [
-        -12.38,
-        1.37
+        -9.67,
+        1.4
       ],
       "intra": [
-        -10.8,
-        0.99
+        -7.37,
+        1.08
       ],
       "5d": [
-        -5.0,
-        27.14
+        -4.98,
+        32.03
       ],
       "20d": [
-        -14.51,
-        66.37
+        -14.44,
+        72.78
       ]
     }
   }
