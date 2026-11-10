@@ -1,12 +1,12 @@
 {
-  "built_at": "2026-11-10T01:21:55+01:00",
-  "built_at_label": "10.11.2026 01:21 CET",
+  "built_at": "2026-11-10T03:36:16+01:00",
+  "built_at_label": "10.11.2026 03:36 CET",
   "groups": {
     "Indices": [
       {
         "ticker": "ACWI",
         "daily": 2.61,
-        "intra": 1.39,
+        "intra": 1.4,
         "5d": 0.33,
         "20d": -2.66,
         "atr_pct": 1.4,
@@ -58,7 +58,7 @@
         "5d": -0.26,
         "20d": -8.94,
         "atr_pct": 2.4,
-        "dist_sma50_atr": -2.37,
+        "dist_sma50_atr": -2.36,
         "rs": 15.0,
         "rs_chart": "data/charts/QQQ.png",
         "long": [
