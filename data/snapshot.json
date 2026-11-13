@@ -1,6 +1,6 @@
 {
-  "built_at": "2026-11-13T22:28:12+01:00",
-  "built_at_label": "13.11.2026 22:28 CET",
+  "built_at": "2026-11-13T23:05:10+01:00",
+  "built_at_label": "13.11.2026 23:05 CET",
   "groups": {
     "Indices": [
       {
@@ -19,13 +19,13 @@
       },
       {
         "ticker": "SPY",
-        "daily": -0.38,
-        "intra": -0.77,
-        "5d": 2.57,
-        "20d": -1.18,
+        "daily": -0.36,
+        "intra": -0.75,
+        "5d": 2.59,
+        "20d": -1.16,
         "atr_pct": 1.5,
-        "dist_sma50_atr": -0.88,
-        "rs": 5.0,
+        "dist_sma50_atr": -0.87,
+        "rs": 2.0,
         "rs_chart": "data/charts/SPY.png",
         "long": [
           "SPXL",
@@ -117,12 +117,12 @@
       },
       {
         "ticker": "^VIX",
-        "daily": 3.32,
-        "intra": 2.88,
-        "5d": -24.65,
-        "20d": -3.35,
+        "daily": 3.21,
+        "intra": 2.77,
+        "5d": -24.73,
+        "20d": -3.45,
         "atr_pct": 16.0,
-        "dist_sma50_atr": 0.73,
+        "dist_sma50_atr": 0.72,
         "rs": null,
         "rs_chart": null,
         "long": [],
@@ -131,11 +131,11 @@
       },
       {
         "ticker": "^VVIX",
-        "daily": 4.9,
-        "intra": 3.47,
-        "5d": -16.8,
-        "20d": -7.7,
-        "atr_pct": 12.5,
+        "daily": 4.98,
+        "intra": 3.55,
+        "5d": -16.74,
+        "20d": -7.62,
+        "atr_pct": 12.4,
         "dist_sma50_atr": 0.52,
         "rs": null,
         "rs_chart": null,
@@ -149,14 +149,14 @@
     "Indices": {
       "daily": [
         -2.19,
-        4.9
+        4.98
       ],
       "intra": [
         -1.45,
-        3.47
+        3.55
       ],
       "5d": [
-        -24.65,
+        -24.73,
         3.63
       ],
       "20d": [
